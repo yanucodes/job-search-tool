@@ -80,7 +80,27 @@ def update_config(config=None):
         new_config = config.copy()
     for key, value in PARAMS.items():
         print(value)
-        print(f'Will be set to: [{PARAMS_DEFAULTS[key]}]')
+        print(f'Will be set to: [{new_config[key]}]')
         new_value = input('Enter a new value or press Enter to keep current: ')
-        if user_input:
+        if new_value:
             new_config[key] = new_value
+    return new_config
+
+
+def get_config():
+    """
+    Ask user for search parameters until a working configuration is received
+    or the user exits.
+
+    Returns:
+        Dictionary with configuration parameters.
+    """
+    new_config = PARAMS_DEFAULTS.copy()
+    while True:
+        new_config = update_config(config=new_config)
+        if search(new_config) is not None:
+            return new_config
+        elif input('Invalid configuration. Do you want to update it? '
+                   '[yes/no]') == 'no':
+            break
+    return None
