@@ -7,20 +7,23 @@ def display_menu(menu):
     """Display numbered menu options.
 
     Args:
-        menu: Tuple of tuples, each containing a label and a callable.
+        menu: Dictionary mapping keys to tuples of label and callable.
     """
-    for i, menu_item in enumerate(menu):
-        print(f"{i}. {menu_item[0]}")
+    for key, (label, _) in menu.items():
+        print(f"{key}. {label}")
 
 
-def handle_menu_choice(index, menu):
+def handle_menu_choice(choice, menu):
     """Call the function associated with a menu option.
 
     Args:
-        index: Index of the selected menu option.
-        menu: Tuple of tuples, each containing a label and a callable.
+        choice: Key of the selected menu option.
+        menu: Dictionary mapping keys to tuples of label and callable.
     """
-    menu[index][1]()
+    if choice in menu:
+        menu[choice][1]()
+    else:
+        print("Invalid choice.")
 
 
 def add_config():
@@ -43,23 +46,23 @@ def display_configs():
             print(config['config'])
     display_menu(CONFIG_MENU)
     choice = input("Enter your choice: ")
-    handle_menu_choice(int(choice), CONFIG_MENU)
+    handle_menu_choice(choice, CONFIG_MENU)
 
 
-MAIN_MENU = (
-    ('Show search configurations', display_configs),
-)
+MAIN_MENU = {
+    "1": ("Show search configurations", display_configs),
+}
 
-CONFIG_MENU = (
-    ('Add configuration', add_config),
-)
+CONFIG_MENU = {
+    "1": ("Add configuration", add_config),
+}
 
 
 def main():
     """Display the main menu and handle user input."""
     display_menu(MAIN_MENU)
     choice = input("Enter your choice: ")
-    handle_menu_choice(int(choice), MAIN_MENU)
+    handle_menu_choice(choice, MAIN_MENU)
 
 
 if __name__ == "__main__":
