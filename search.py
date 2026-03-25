@@ -4,7 +4,7 @@ import os
 import arbeitsagentur
 
 CONFIG_FILE = "config.json"
-SEARCH_SERVICES = {
+SERVICES = {
     "arbeitsagentur": arbeitsagentur
 }
 
@@ -33,10 +33,10 @@ def add_config(search_service):
     Args:
         search_service: Name of the search service to configure.
     """
-    if search_service not in SEARCH_SERVICES:
+    if search_service not in SERVICES:
         print(f"Service '{search_service}' is not available.")
     else:
-        new_config = SEARCH_SERVICES[search_service].get_config()
+        new_config = SERVICES[search_service].get_config()
         if new_config is not None:
             new_entry = {"service": search_service, "config": new_config}
             configs = load_config()
