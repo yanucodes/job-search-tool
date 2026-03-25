@@ -36,25 +36,58 @@ def add_config():
 
 
 def display_configs():
-    """Display saved search configurations and show the configuration menu."""
+    """Display saved search configurations."""
     configs = search.load_config()
     if len(configs) == 0:
         print("No configurations set up yet.")
     else:
-        for config in configs:
-            print(f"Configuration for {config['service']}:")
-            print(config['config'])
+        for i, config in enumerate(configs):
+            print(f"{i+1}. Configuration for {config['service']}:")
+            print(f"   {config['config']}")
+
+
+def select_config():
+    """Prompt the user to select a configuration by index.
+
+    Returns:
+        Index of the selected configuration, or None if the user cancels.
+    """
+    configs = search.load_config()
+    print("0. Cancel")
+    while True:
+        choice = input("Select a configuration by number: ")
+        if choice.isdigit():
+            choice = int(choice)
+            if not choice:
+                return None
+            elif 0 < choice <= len(configs):
+                return choice - 1
+        print("Invalid choice.")
+
+
+def update_config():
+    """Prompt the user to select and update a search configuration."""
+    display_configs()
+    index = select_config()
+    if index is not None:
+        search.update_config(index)
+
+
+def show_config_menu():
+    """Display saved configurations and the configuration menu."""
+    display_configs()
     display_menu(CONFIG_MENU)
     choice = input("Enter your choice: ")
     handle_menu_choice(choice, CONFIG_MENU)
 
 
 MAIN_MENU = {
-    "1": ("Show search configurations", display_configs),
+    "1": ("Show search configurations", show_config_menu)
 }
 
 CONFIG_MENU = {
     "1": ("Add configuration", add_config),
+    "2": ("Update configuration", update_config),
 }
 
 
