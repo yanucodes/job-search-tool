@@ -1,7 +1,7 @@
 import json
 import os
 
-import arbeitsagentur
+from jobboards import arbeitsagentur
 
 CONFIG_FILE = "config.json"
 SERVICES = {
