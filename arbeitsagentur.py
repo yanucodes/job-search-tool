@@ -54,13 +54,23 @@ def search(params):
         List of dictionaries with information about jobs, or None if GET
         request fails.
     """
-    response = requests.get(API_URL, headers=HEADERS,
-                            params=params, verify=True)
-    if response.status_code == 200:
-        return response.json().get("stellenangebote", [])
-    print(f"Status code: {response.status_code}. Failed to fetch data "
-          "from arbeitsagentur.de")
-    return None
+    jobs = []
+    page = 1
+    while True:
+        query = query = {**params, "page": str(page)}
+        response = requests.get(API_URL, headers=HEADERS, params=query,
+                                verify=True)
+        if response.status_code != 200:
+            print(f"Status code: {response.status_code}. Failed to fetch data "
+                  "from arbeitsagentur.de")
+            return None
+        jobs_to_add = response.json().get("stellenangebote")
+        if jobs_to_add is not None:
+            jobs.extend(jobs_to_add)
+            page += 1
+        else:
+            break
+    return jobs
 
 
 def update_config(config=None):
