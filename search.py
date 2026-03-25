@@ -33,3 +33,8 @@ def arbeitsagentur_search(params):
     print(f"Status code: {response.status_code}. Failed to fetch data "
           "from arbeitsagentur.de")
     return None
+
+
+SEARCH_SERVICES = {
+    "arbeitsagentur": arbeitsagentur_search
+}
