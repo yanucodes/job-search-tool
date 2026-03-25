@@ -1,6 +1,10 @@
+"""
+Module to configure and run search on arbeitsagentur.de
+"""
+
 import requests
 
-CONFIG_FILE = "config.json"
+
 BFA_HEADERS = {
         'User-Agent': 'Jobsuche/2.9.2 (de.arbeitsagentur.jobboerse; '
                       'build:1077; iOS 15.1.0) Alamofire/5.4.4',
@@ -36,7 +40,7 @@ BFA_PARAMS_DEFAULTS = {
 }
 
 
-def arbeitsagentur_search(params):
+def search(params):
     """
     Search for jobs on https://www.arbeitsagentur.de.
     Parameters can be found here: https://jobsuche.api.bund.dev/
@@ -80,8 +84,3 @@ def update_arbeitsagentur_config(config=None):
         new_value = input('Enter a new value or press Enter to keep current: ')
         if user_input:
             new_config[key] = new_value
-
-
-SEARCH_SERVICES = {
-    "arbeitsagentur": arbeitsagentur_search
-}
