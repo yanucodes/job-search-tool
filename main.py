@@ -1,6 +1,7 @@
 """Command-line interface for job search."""
 
 import search
+import sys
 
 
 def display_menu(menu):
@@ -89,22 +90,35 @@ def show_config_menu():
     handle_menu_choice(choice, CONFIG_MENU)
 
 
+def go_back():
+    """Placeholder for menu navigation. Returns to the previous menu."""
+    pass
+
+
+def exit_program():
+    """Exit the application."""
+    sys.exit()
+
+
 MAIN_MENU = {
-    "1": ("Show search configurations", show_config_menu)
+    "1": ("Show search configurations", show_config_menu),
+    "0": ("Exit", exit_program),
 }
 
 CONFIG_MENU = {
     "1": ("Add configuration", add_config),
     "2": ("Update configuration", update_config),
     "3": ("Remove configuration", remove_config),
+    "0": ("Back", go_back),
 }
 
 
 def main():
-    """Display the main menu and handle user input."""
-    display_menu(MAIN_MENU)
-    choice = input("Enter your choice: ")
-    handle_menu_choice(choice, MAIN_MENU)
+    """Display the main menu in a loop until the user exits."""
+    while True:
+        display_menu(MAIN_MENU)
+        choice = input("Enter your choice: ")
+        handle_menu_choice(choice, MAIN_MENU)
 
 
 if __name__ == "__main__":
