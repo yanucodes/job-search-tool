@@ -69,3 +69,18 @@ def update_config(index):
         configs[index]["config"] = new_config
         with open(CONFIG_FILE, "w", encoding="utf-8") as f:
             json.dump(configs, f)
+
+
+def remove_config(index):
+    """Remove a search configuration at a given index and save the updated list.
+
+    Args:
+        index: Index of the configuration to remove.
+    """
+    configs = load_config()
+    if index < 0 or index >= len(configs):
+        print("Invalid configuration index.")
+        return
+    configs.pop(index)
+    with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+        json.dump(configs, f)
