@@ -73,6 +73,14 @@ def update_config():
         search.update_config(index)
 
 
+def remove_config():
+    """Prompt the user to select and remove a search configuration."""
+    display_configs()
+    index = select_config()
+    if index is not None:
+        search.remove_config(index)
+
+
 def show_config_menu():
     """Display saved configurations and the configuration menu."""
     display_configs()
@@ -88,6 +96,7 @@ MAIN_MENU = {
 CONFIG_MENU = {
     "1": ("Add configuration", add_config),
     "2": ("Update configuration", update_config),
+    "3": ("Remove configuration", remove_config),
 }
 
 
