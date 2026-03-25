@@ -5,16 +5,16 @@ Module to configure and run search on arbeitsagentur.de
 import requests
 
 
-BFA_HEADERS = {
+HEADERS = {
         'User-Agent': 'Jobsuche/2.9.2 (de.arbeitsagentur.jobboerse; '
                       'build:1077; iOS 15.1.0) Alamofire/5.4.4',
         'Host': 'rest.arbeitsagentur.de',
         'X-API-Key': 'jobboerse-jobsuche',
         'Connection': 'keep-alive',
     }
-BFA_API_URL = ('https://rest.arbeitsagentur.de/jobboerse/jobsuche-service/pc'
+API_URL = ('https://rest.arbeitsagentur.de/jobboerse/jobsuche-service/pc'
                '/v4/app/jobs')
-BFA_PARAMS = {
+PARAMS = {
     'was': 'Freitext suche Jobtitel',
     'wo': 'Freitext suche Beschäftigungsort',
     'veroeffentlichtseit': 'Anzahl der Tage, seit der Job veröffentlicht '
@@ -29,7 +29,7 @@ BFA_PARAMS = {
                    'mj=MINIJOB',
     'umkreis': 'Umkreis in Kilometern von Wo-Parameter. (z.B. 25 oder 200)'
 }
-BFA_PARAMS_DEFAULTS = {
+PARAMS_DEFAULTS = {
     'was': 'python',
     'wo': 'Berlin',
     'veroeffentlichtseit': '7',
@@ -54,7 +54,7 @@ def search(params):
         List of dictionaries with information about jobs, or None if GET
         request fails.
     """
-    response = requests.get(BFA_API_URL, headers=BFA_HEADERS,
+    response = requests.get(API_URL, headers=HEADERS,
                             params=params, verify=True)
     if response.status_code == 200:
         return response.json().get('stellenangebote', [])
@@ -63,7 +63,7 @@ def search(params):
     return None
 
 
-def update_arbeitsagentur_config(config=None):
+def update_config(config=None):
     """
     Update parameters to configure search on https://www.arbeitsagentur.de.
 
@@ -75,12 +75,12 @@ def update_arbeitsagentur_config(config=None):
         Dictionary with configuration parameters.
     """
     if config is None:
-        new_config = BFA_PARAMS_DEFAULTS.copy()
+        new_config = PARAMS_DEFAULTS.copy()
     else:
         new_config = config.copy()
-    for key, value in BFA_PARAMS.items():
+    for key, value in PARAMS.items():
         print(value)
-        print(f'Will be set to: [{BFA_PARAMS_DEFAULTS[key]}]')
+        print(f'Will be set to: [{PARAMS_DEFAULTS[key]}]')
         new_value = input('Enter a new value or press Enter to keep current: ')
         if user_input:
             new_config[key] = new_value
