@@ -78,16 +78,13 @@ def update_config(config=None):
     Update parameters to configure search on https://www.arbeitsagentur.de.
 
     Args:
-        config: dictionary with parameters to modify, if None a default
-                configuration will be used.
+        config: Optional dictionary with existing parameters to modify.
+                If None, default parameters will be used.
 
     Returns:
         Dictionary with configuration parameters.
     """
-    if config is None:
-        new_config = PARAMS_DEFAULTS.copy()
-    else:
-        new_config = config.copy()
+    new_config = config.copy() if config else PARAMS_DEFAULTS.copy()
     for key, value in PARAMS.items():
         print(value)
         print(f"Will be set to: [{new_config[key]}]")
@@ -97,15 +94,19 @@ def update_config(config=None):
     return new_config
 
 
-def get_config():
+def get_config(config=None):
     """
     Ask user for search parameters until a working configuration is received
     or the user exits.
 
+    Args:
+        config: Optional dictionary with existing parameters to modify.
+                If None, default parameters will be used.
+
     Returns:
-        Dictionary with configuration parameters.
+        Dictionary with configuration parameters, or None if the user exits.
     """
-    new_config = PARAMS_DEFAULTS.copy()
+    new_config = config.copy() if config else PARAMS_DEFAULTS.copy()
     while True:
         new_config = update_config(config=new_config)
         if search(new_config) is not None:

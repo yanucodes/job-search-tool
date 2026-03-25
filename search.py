@@ -46,3 +46,26 @@ def add_config(search_service):
                 configs.append(new_entry)
                 with open(CONFIG_FILE, "w", encoding="utf-8") as f:
                     json.dump(configs, f)
+
+
+def update_config(index):
+    """Update an existing search configuration at a given index.
+
+    Loads configurations, updates the one at the given index using the
+    service's get_config, and saves the updated list. Does nothing if the
+    user exits before a valid configuration is provided.
+
+    Args:
+        index: Index of the configuration to update.
+    """
+    configs = load_config()
+    if index < 0 or index >= len(configs):
+        print("Invalid configuration index.")
+        return
+    entry = configs[index]
+    service = entry["service"]
+    new_config = SERVICES[service].get_config(config=entry["config"])
+    if new_config is not None:
+        configs[index]["config"] = new_config
+        with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+            json.dump(configs, f)
