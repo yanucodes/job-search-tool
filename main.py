@@ -54,17 +54,8 @@ def select_config():
     Returns:
         Index of the selected configuration, or None if the user cancels.
     """
-    configs = search.get_searches()
-    print("0. Cancel")
-    while True:
-        choice = input("Select a configuration by number: ")
-        if choice.isdigit():
-            choice = int(choice)
-            if not choice:
-                return None
-            elif 0 < choice <= len(configs):
-                return choice - 1
-        print("Invalid choice.")
+    return select_number("Select a configuration by number: ",
+                         len(search.get_searches()))
 
 
 def update_config():
