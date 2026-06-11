@@ -38,7 +38,12 @@ TABLE_HEADER = r"""\documentclass{article}
 \usepackage[T1]{fontenc}
 \usepackage[margin=2cm]{geometry}
 \usepackage{longtable}
+\usepackage{xcolor}
 \usepackage{hyperref}
+\definecolor{linkgray}{gray}{0.35}
+\hypersetup{colorlinks=true, allcolors=linkgray}
+\renewcommand{\arraystretch}{1.5}
+\setlength{\tabcolsep}{10pt}
 \begin{document}
 \section*{Bewerbungsübersicht}
 Stand: %s
