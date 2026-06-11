@@ -64,5 +64,4 @@ Then register the module in `SERVICES` in `search.py`. See
 
 I designed and wrote the initial structure of this project myself, and
 later extended it with the help of AI tools. Every line of code is
-reviewed, understood and maintained by me — I use AI deliberately to move
-faster, not as a substitute for understanding what the code does.
+reviewed, understood and maintained by me.
