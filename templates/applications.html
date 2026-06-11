@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}My applications{% endblock %}
+
+{% block content %}
+    <h1>My applications</h1>
+    {% if not applications %}
+    <h2>No saved applications yet.</h2>
+    {% endif %}
+    {% for application in applications %}
+    <div class="card">
+        <details>
+            <summary>
+                <span class="status">{{ application.status }}</span>
+                <strong>{{ application.title }}</strong> -
+                {{ application.company }} ({{ application.saved }})
+            </summary>
+            <p>{{ application.location }} · published
+               {{ application.published }} on {{ application.service }}</p>
+            <p><a href="{{ application.url }}" target="_blank">open posting</a></p>
+            <form method="POST"
+                  action="{{ url_for('update_status', index=loop.index0) }}">
+                <label for="status-{{ loop.index0 }}">Status: </label>
+                <select id="status-{{ loop.index0 }}" name="status"
+                        onchange="this.form.submit()">
+                    {% for status in statuses %}
+                    <option value="{{ status }}"
+                            {% if status == application.status %}selected{% endif %}>
+                        {{ status }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+        </details>
+    </div>
+    {% endfor %}
+{% endblock %}

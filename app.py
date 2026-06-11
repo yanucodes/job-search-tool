@@ -71,10 +71,31 @@ def resolve_job(action):
 
 
 @app.route("/")
+def index():
+    """Redirect the start page to the application list."""
+    return redirect(url_for("applications"))
+
+
 @app.route("/applications")
 def applications():
-    """List saved applications. Implemented in the next commit."""
-    return "Coming soon."
+    """Show the jobs the user plans to apply for and their status."""
+    return render_template("applications.html",
+                           applications=tracker.load_applications(),
+                           statuses=tracker.STATUSES)
+
+
+@app.route("/applications/<int:index>/status", methods=["POST"])
+def update_status(index):
+    """Set the application status of a saved job.
+
+    Args:
+        index: Index of the application in the saved list.
+    """
+    status = request.form["status"]
+    if (0 <= index < len(tracker.load_applications())
+            and status in tracker.STATUSES):
+        tracker.update_status(index, status)
+    return redirect(url_for("applications"))
 
 
 if __name__ == "__main__":
