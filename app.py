@@ -84,11 +84,24 @@ def index():
 
 @app.route("/applications")
 def applications():
-    """Show the jobs the user plans to apply for and their status."""
+    """Show the jobs the user plans to apply for, grouped by progress.
+
+    The page has one section for jobs still to apply for and one for jobs
+    the application process has started on. Each application is paired
+    with its index in the saved list, which the status form posts back.
+    """
     applications = tracker.load_applications()
     for application in applications:
         application["status"] = tracker.get_status(application)
-    return render_template("applications.html", applications=applications,
+    entries = list(enumerate(applications))
+    groups = [
+        ("To apply", [entry for entry in entries
+                      if entry[1]["status"] == "to apply"]),
+        ("Applied", [entry for entry in entries
+                     if entry[1]["status"] != "to apply"]),
+    ]
+    return render_template("applications.html", groups=groups,
+                           empty=not applications,
                            statuses=tracker.STATUSES,
                            timeline_fields=tracker.TIMELINE_FIELDS)
 

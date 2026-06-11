@@ -42,7 +42,8 @@ and output files.
   job to the application list, *Mark as seen* discards it; either way the
   next job appears. *Search again* re-runs the search.
 - **My applications** (`/applications`) — lists the saved jobs with their
-  status. Click an entry to see its details and change the status
+  status, grouped into jobs still to apply for and jobs already applied
+  to. Click an entry to see its details and change the status
   (`to apply`, `applied`, `invited`, `interview`, `offer`, `rejected`);
   the date of each status change is recorded automatically, building a
   timeline of the application process.

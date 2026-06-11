@@ -4,15 +4,18 @@
 
 {% block content %}
     <h1>My applications</h1>
-    {% if applications %}
+    {% if empty %}
+    <h2>No saved applications yet.</h2>
+    {% else %}
     <div class="toolbar">
         <a href="{{ url_for('applications_pdf') }}" class="button"
            target="_blank">Generate PDF</a>
     </div>
-    {% else %}
-    <h2>No saved applications yet.</h2>
     {% endif %}
-    {% for application in applications %}
+    {% for heading, group in groups %}
+    {% if group %}
+    <h2>{{ heading }}</h2>
+    {% for index, application in group %}
     <div class="card">
         <details>
             <summary>
@@ -32,9 +35,9 @@
                 {% endfor %}
             </ul>
             <form method="POST"
-                  action="{{ url_for('update_status', index=loop.index0) }}">
-                <label for="status-{{ loop.index0 }}">Status: </label>
-                <select id="status-{{ loop.index0 }}" name="status"
+                  action="{{ url_for('update_status', index=index) }}">
+                <label for="status-{{ index }}">Status: </label>
+                <select id="status-{{ index }}" name="status"
                         onchange="this.form.submit()">
                     {% for status in statuses %}
                     <option value="{{ status }}"
@@ -45,5 +48,7 @@
             </form>
         </details>
     </div>
+    {% endfor %}
+    {% endif %}
     {% endfor %}
 {% endblock %}
