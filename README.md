@@ -1,9 +1,11 @@
 # job-search-tool
 
-A command-line tool that searches job boards, shows each new posting with
-its description, and lets you save it to an application list or discard it.
+A tool that searches job boards, shows each new posting with its
+description, and lets you save it to an application list or discard it.
 Jobs you have already reviewed are remembered by their job ID and are not
-shown again. Currently supported job board: [arbeitsagentur.de](https://www.arbeitsagentur.de).
+shown again. It comes with a command-line interface and a small web
+interface. Currently supported job board:
+[arbeitsagentur.de](https://www.arbeitsagentur.de).
 
 ## Setup
 
@@ -30,6 +32,25 @@ From the main menu you can:
    `offer`, `rejected`).
 3. **Show search configurations** — add, update or remove saved searches.
 4. **Set output directory** — choose where results are stored.
+
+## Web interface
+
+```sh
+python app.py
+```
+
+Then open <http://127.0.0.1:5000>. Search configurations are managed with
+the command-line interface; the web interface uses the same saved searches
+and output files.
+
+- **Review new jobs** (`/review`) — searches all job boards once and shows
+  one new job at a time with its description. *Add to my list* saves the
+  job to the application list, *Mark as seen* discards it; either way the
+  next job appears. *Search again* re-runs the search.
+- **My applications** (`/applications`) — lists the saved jobs with their
+  status. Click an entry to see its details and change the status.
+- **Generate PDF** (`/applications/pdf`) — compiles the LaTeX table of
+  applications with `pdflatex` (must be installed) and opens the PDF.
 
 ## Output directory
 
