@@ -46,8 +46,9 @@ and output files.
   (`to apply`, `applied`, `invited`, `interview`, `offer`, `rejected`);
   the date of each status change is recorded automatically, building a
   timeline of the application process.
-- **Generate PDF** (`/applications/pdf`) — compiles the LaTeX table of
-  applications with `pdflatex` (must be installed) and opens the PDF.
+- **Generate PDF** (`/applications/pdf`) — compiles a PDF summary of the
+  jobs you applied for and how each application went, using `pdflatex`
+  (must be installed).
 
 ## Output directory
 
@@ -59,8 +60,9 @@ All results live in the configured output directory:
   the timeline of the application process: the dates of applying, the
   interview invitation, the interview and the final decision, and what the
   decision was.
-- `applications.tex` — the same list as a LaTeX table, regenerated on every
-  change. Compile it with `pdflatex applications.tex` for a PDF overview.
+- `applications.tex` — a LaTeX table summarizing the jobs you applied for
+  and the outcomes, regenerated on every change. Compile it with
+  `pdflatex applications.tex` for a PDF overview.
 
 ## Adding another job board
 

@@ -27,14 +27,23 @@ LATEX_SPECIAL_CHARS = {
     "~": r"\textasciitilde{}",
     "^": r"\textasciicircum{}",
 }
+TIMELINE_LABELS = {
+    "applied": "Beworben",
+    "invited": "Einladung erhalten",
+    "interview": "Vorstellungsgespräch",
+    "decided": "Entscheidung",
+}
+DECISION_LABELS = {"offer": "Zusage", "rejected": "Absage"}
 TABLE_HEADER = r"""\documentclass{article}
 \usepackage[margin=2cm]{geometry}
 \usepackage{longtable}
 \usepackage{hyperref}
 \begin{document}
-\section*{Job applications}
-\begin{longtable}{rlllll}
-\# & Saved & Title & Company & Location & Status \\
+\section*{Bewerbungsübersicht}
+Stand: %s
+\begin{longtable}{|p{0.55\textwidth}|p{0.33\textwidth}|}
+\hline
+\textbf{Stellenangebot} & \textbf{Bewerbungsverlauf} \\
 \hline
 \endhead
 """
@@ -121,26 +130,73 @@ def escape_latex(text):
     return "".join(LATEX_SPECIAL_CHARS.get(char, char) for char in text)
 
 
-def write_latex_table(applications):
-    """Write the application list as a LaTeX table to the output directory.
+def format_date(date):
+    """Format an ISO date for the LaTeX table.
 
-    Each row shows when the job was saved, its title (linked to the
-    posting), company, location and the current application status.
+    Args:
+        date: Date as an ISO string (YYYY-MM-DD).
+
+    Returns:
+        The date as DD.MM.YYYY.
+    """
+    return datetime.date.fromisoformat(date).strftime("%d.%m.%Y")
+
+
+def latex_job_cell(application):
+    """Build the table cell describing the job of an application.
+
+    Args:
+        application: Application dictionary.
+
+    Returns:
+        LaTeX for the cell: title, company, place and link to the posting.
+    """
+    return " \\newline ".join([
+        f"\\textbf{{{escape_latex(application['title'])}}}",
+        escape_latex(f"{application['company']}, {application['location']}"),
+        f"\\url{{{application['url']}}}",
+    ])
+
+
+def latex_timeline_cell(application):
+    """Build the table cell with the timeline of an application.
+
+    Args:
+        application: Application dictionary.
+
+    Returns:
+        LaTeX for the cell: one line per recorded timeline date.
+    """
+    lines = []
+    for field in TIMELINE_FIELDS:
+        if not application.get(field):
+            continue
+        label = TIMELINE_LABELS[field]
+        if field == "decided" and application.get("decision"):
+            label = DECISION_LABELS[application["decision"]]
+        lines.append(f"{label}: {format_date(application[field])}")
+    return " \\newline ".join(lines)
+
+
+def write_latex_table(applications):
+    """Write the applied-for jobs as a LaTeX table to the output directory.
+
+    Only jobs the user has applied to are included. Each row shows the job
+    (title, company, place and link to the posting) next to the timeline
+    of the application process.
 
     Args:
         applications: List of application dictionaries.
     """
     rows = []
-    for i, application in enumerate(applications):
-        title = (f"\\href{{{application['url']}}}"
-                 f"{{{escape_latex(application['title'])}}}")
-        cells = [str(i + 1), application["saved"], title,
-                 escape_latex(application["company"]),
-                 escape_latex(application["location"]),
-                 escape_latex(get_status(application))]
-        rows.append(" & ".join(cells) + " \\\\\n")
+    for application in applications:
+        if not application.get("applied"):
+            continue
+        rows.append(f"{latex_job_cell(application)} & "
+                    f"{latex_timeline_cell(application)} \\\\\n\\hline\n")
+    header = TABLE_HEADER % format_date(datetime.date.today().isoformat())
     with open(output_path(APPLICATIONS_TABLE), "w", encoding="utf-8") as f:
-        f.write(TABLE_HEADER + "".join(rows) + TABLE_FOOTER)
+        f.write(header + "".join(rows) + TABLE_FOOTER)
 
 
 def add_application(service, record):
