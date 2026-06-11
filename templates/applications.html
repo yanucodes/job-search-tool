@@ -23,6 +23,14 @@
             <p>{{ application.location }} · published
                {{ application.published }} on {{ application.service }}</p>
             <p><a href="{{ application.url }}" target="_blank">open posting</a></p>
+            <ul class="timeline">
+                {% for field in timeline_fields %}
+                {% if application[field] %}
+                <li>{{ field }}: {{ application[field] }}
+                    {%- if field == "decided" %} ({{ application.decision }}){% endif %}</li>
+                {% endif %}
+                {% endfor %}
+            </ul>
             <form method="POST"
                   action="{{ url_for('update_status', index=loop.index0) }}">
                 <label for="status-{{ loop.index0 }}">Status: </label>

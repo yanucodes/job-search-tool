@@ -42,7 +42,10 @@ and output files.
   job to the application list, *Mark as seen* discards it; either way the
   next job appears. *Search again* re-runs the search.
 - **My applications** (`/applications`) — lists the saved jobs with their
-  status. Click an entry to see its details and change the status.
+  status. Click an entry to see its details and change the status
+  (`to apply`, `applied`, `invited`, `interview`, `offer`, `rejected`);
+  the date of each status change is recorded automatically, building a
+  timeline of the application process.
 - **Generate PDF** (`/applications/pdf`) — compiles the LaTeX table of
   applications with `pdflatex` (must be installed) and opens the PDF.
 
@@ -53,7 +56,9 @@ All results live in the configured output directory:
 - `seen.json` — IDs of jobs you have already reviewed (for arbeitsagentur
   this is the posting's `refnr`).
 - `applications.json` — the jobs you plan to apply for, with saved date and
-  application status.
+  the timeline of the application process: the dates of applying, the
+  interview invitation, the interview and the final decision, and what the
+  decision was.
 - `applications.tex` — the same list as a LaTeX table, regenerated on every
   change. Compile it with `pdflatex applications.tex` for a PDF overview.
 

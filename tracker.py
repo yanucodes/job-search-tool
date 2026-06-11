@@ -12,7 +12,9 @@ import search
 SEEN_FILE = "seen.json"
 APPLICATIONS_FILE = "applications.json"
 APPLICATIONS_TABLE = "applications.tex"
-STATUSES = ["to apply", "applied", "interview", "offer", "rejected"]
+TIMELINE_FIELDS = ["applied", "invited", "interview", "decided"]
+DECISIONS = ["offer", "rejected"]
+STATUSES = ["to apply", "applied", "invited", "interview"] + DECISIONS
 LATEX_SPECIAL_CHARS = {
     "\\": r"\textbackslash{}",
     "&": r"\&",
@@ -135,14 +137,14 @@ def write_latex_table(applications):
         cells = [str(i + 1), application["saved"], title,
                  escape_latex(application["company"]),
                  escape_latex(application["location"]),
-                 escape_latex(application["status"])]
+                 escape_latex(get_status(application))]
         rows.append(" & ".join(cells) + " \\\\\n")
     with open(output_path(APPLICATIONS_TABLE), "w", encoding="utf-8") as f:
         f.write(TABLE_HEADER + "".join(rows) + TABLE_FOOTER)
 
 
 def add_application(service, record):
-    """Add a job to the application list with the initial status.
+    """Add a job to the application list with an empty timeline.
 
     Args:
         service: Name of the job board the job came from.
@@ -152,19 +154,54 @@ def add_application(service, record):
     applications.append({
         "service": service,
         "saved": datetime.date.today().isoformat(),
-        "status": STATUSES[0],
+        **{field: "" for field in TIMELINE_FIELDS},
+        "decision": "",
         **record,
     })
     save_applications(applications)
 
 
+def get_status(application):
+    """Derive the displayed status of an application from its timeline.
+
+    The status is the latest timeline event: the decision if one was made,
+    otherwise "interview", "invited", "applied" or "to apply".
+
+    Args:
+        application: Application dictionary.
+
+    Returns:
+        Status as a string.
+    """
+    if application.get("decision"):
+        return application["decision"]
+    if application.get("interview"):
+        return "interview"
+    if application.get("invited"):
+        return "invited"
+    if application.get("applied"):
+        return "applied"
+    return "to apply"
+
+
 def update_status(index, status):
-    """Set the application status of a saved job.
+    """Set the status of a saved job by updating its timeline.
+
+    The timeline date of the new status is set to today, later dates and
+    the decision are cleared, and earlier dates are kept. The status
+    "to apply" clears the whole timeline.
 
     Args:
         index: Index of the application in the saved list.
         status: New status, one of STATUSES.
     """
     applications = load_applications()
-    applications[index]["status"] = status
+    application = applications[index]
+    field = "decided" if status in DECISIONS else status
+    position = TIMELINE_FIELDS.index(field) if field in TIMELINE_FIELDS else -1
+    if position >= 0:
+        application[field] = datetime.date.today().isoformat()
+    for later_field in TIMELINE_FIELDS[position + 1:]:
+        application[later_field] = ""
+    application["decision"] = status if status in DECISIONS else ""
     save_applications(applications)

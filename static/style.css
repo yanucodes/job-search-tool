@@ -129,6 +129,12 @@ select:focus {
     margin: 0 0 12px;
 }
 
+.timeline {
+    margin: 0 0 12px;
+    padding-left: 18px;
+    color: #5a6a63;
+}
+
 .status {
     display: inline-block;
     background-color: #e3efe6;

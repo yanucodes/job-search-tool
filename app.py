@@ -85,14 +85,19 @@ def index():
 @app.route("/applications")
 def applications():
     """Show the jobs the user plans to apply for and their status."""
-    return render_template("applications.html",
-                           applications=tracker.load_applications(),
-                           statuses=tracker.STATUSES)
+    applications = tracker.load_applications()
+    for application in applications:
+        application["status"] = tracker.get_status(application)
+    return render_template("applications.html", applications=applications,
+                           statuses=tracker.STATUSES,
+                           timeline_fields=tracker.TIMELINE_FIELDS)
 
 
 @app.route("/applications/<int:index>/status", methods=["POST"])
 def update_status(index):
     """Set the application status of a saved job.
+
+    The timeline date of the chosen status is stamped automatically.
 
     Args:
         index: Index of the application in the saved list.
