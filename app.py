@@ -116,7 +116,7 @@ def applications_pdf():
     output_dir = search.get_output_dir()
     result = subprocess.run(
         ["pdflatex", "-interaction=nonstopmode", tracker.APPLICATIONS_TABLE],
-        cwd=output_dir, capture_output=True, text=True)
+        cwd=output_dir, capture_output=True, text=True, errors="replace")
     if result.returncode != 0:
         return (f"pdflatex failed:\n{result.stdout}", 500,
                 {"Content-Type": "text/plain; charset=utf-8"})

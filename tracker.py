@@ -35,6 +35,7 @@ TIMELINE_LABELS = {
 }
 DECISION_LABELS = {"offer": "Zusage", "rejected": "Absage"}
 TABLE_HEADER = r"""\documentclass{article}
+\usepackage[T1]{fontenc}
 \usepackage[margin=2cm]{geometry}
 \usepackage{longtable}
 \usepackage{hyperref}
