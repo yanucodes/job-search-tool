@@ -38,7 +38,7 @@ def add_config():
 
 def display_configs():
     """Display saved search configurations."""
-    configs = search.load_config()
+    configs = search.get_searches()
     if len(configs) == 0:
         print("No configurations set up yet.")
     else:
@@ -53,7 +53,7 @@ def select_config():
     Returns:
         Index of the selected configuration, or None if the user cancels.
     """
-    configs = search.load_config()
+    configs = search.get_searches()
     print("0. Cancel")
     while True:
         choice = input("Select a configuration by number: ")
@@ -90,6 +90,17 @@ def show_config_menu():
     handle_menu_choice(choice, CONFIG_MENU)
 
 
+def configure_output_dir():
+    """Prompt the user to set the directory where results are saved."""
+    current = search.get_output_dir()
+    print(f"Current output directory: {current}")
+    new_dir = input("Enter a new output directory or press Enter to keep "
+                    "current: ")
+    if new_dir:
+        saved = search.set_output_dir(new_dir)
+        print(f"Output directory set to: {saved}")
+
+
 def go_back():
     """Placeholder for menu navigation. Returns to the previous menu."""
     pass
@@ -102,6 +113,7 @@ def exit_program():
 
 MAIN_MENU = {
     "1": ("Show search configurations", show_config_menu),
+    "2": ("Set output directory", configure_output_dir),
     "0": ("Exit", exit_program),
 }
 
