@@ -90,29 +90,50 @@ def parse_description_external(job_url):
     return f"See details at {job_url}"
 
 
-def parse_job(job):
-    """Add 'job_url' and 'job_description' fields to a job dictionary.
+def normalize(job):
+    """Convert a raw job dictionary to the standard record format.
 
     For internal postings the URL is built from JOB_URL_PREFIX and the
-    posting's reference number, and the description is extracted from that
-    page. For external postings (those carrying an "externeUrl") the URL is
-    the external one and the description points to it.
+    posting's reference number. For external postings (those carrying an
+    "externeUrl") the URL is the external one.
 
     Args:
         job: A job dictionary as returned by search().
 
     Returns:
-        The same dictionary, with "job_url" and "job_description" added.
+        Dictionary with the standard keys "id", "title", "company",
+        "location", "published" and "url". The job ID is the posting's
+        reference number (refnr).
     """
-    external_url = job.get("externeUrl")
-    if external_url:
-        job["job_url"] = external_url
-        job["job_description"] = parse_description_external(external_url)
-    else:
-        job_url = JOB_URL_PREFIX + quote(job["refnr"], safe="")
-        job["job_url"] = job_url
-        job["job_description"] = parse_description_internal(job_url)
-    return job
+    url = job.get("externeUrl")
+    if not url:
+        url = JOB_URL_PREFIX + quote(job["refnr"], safe="")
+    return {
+        "id": job["refnr"],
+        "title": job.get("titel") or job.get("beruf", ""),
+        "company": job.get("arbeitgeber", ""),
+        "location": job.get("arbeitsort", {}).get("ort", ""),
+        "published": job.get("aktuelleVeroeffentlichungsdatum", ""),
+        "url": url,
+    }
+
+
+def description(record):
+    """Return the description text for a normalized job record.
+
+    Descriptions of internal postings are extracted from their detail page
+    on arbeitsagentur.de. External postings have no description there, so
+    the text points the reader to the external page instead.
+
+    Args:
+        record: A job record as returned by normalize().
+
+    Returns:
+        Plain-text job description, or None if it cannot be fetched.
+    """
+    if record["url"].startswith(JOB_URL_PREFIX):
+        return parse_description_internal(record["url"])
+    return parse_description_external(record["url"])
 
 
 def search(params):
