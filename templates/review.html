@@ -30,7 +30,13 @@
                 <input type="submit" value="Mark as seen">
             </form>
         </div>
-        <div class="description">{{ description or "No description available." }}</div>
+        <div class="description">
+            {% if description %}
+                {{ description|safe }}
+            {% else %}
+                No description available.
+            {% endif %}
+        </div>
     </div>
     {% else %}
     <h2>No new jobs to review.</h2>

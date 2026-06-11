@@ -2,6 +2,7 @@
 Module to configure and run search on arbeitsagentur.de
 """
 
+from html import escape
 from urllib.parse import quote
 
 import requests
@@ -48,20 +49,46 @@ DETAILS_HEADERS = {
                   "Chrome/120.0.0.0 Safari/537.36"
 }
 DESCRIPTION_ELEMENT_ID = "detail-beschreibung-text-container"
+REMOVED_ELEMENTS = ["script", "style", "iframe"]
+
+
+def clean_description(container):
+    """Prepare fetched description markup for embedding into our pages.
+
+    Scripts, styles and event-handler attributes are removed, and all
+    links open in a new tab.
+
+    Args:
+        container: BeautifulSoup element holding the description.
+
+    Returns:
+        The cleaned description as an HTML string.
+    """
+    for tag in container.find_all(REMOVED_ELEMENTS):
+        tag.decompose()
+    for tag in container.find_all(True):
+        for attribute in list(tag.attrs):
+            if attribute.startswith("on"):
+                del tag[attribute]
+    for link in container.find_all("a"):
+        link["target"] = "_blank"
+        link["rel"] = "noopener"
+    return container.decode_contents()
 
 
 def parse_description_internal(job_url):
-    """Fetch an internal posting's page and extract its description text.
+    """Fetch an internal posting's page and extract its description.
 
-    Downloads the job detail page hosted on arbeitsagentur.de and returns the
-    text of the description element.
+    Downloads the job detail page hosted on arbeitsagentur.de and returns
+    the cleaned markup of the description element, so the formatting of
+    the posting is kept.
 
     Args:
         job_url: URL of the internal job detail page.
 
     Returns:
-        Plain-text job description, or None if the request fails or the
-        description element is not found.
+        Job description as an HTML string, or None if the request fails or
+        the description element is not found.
     """
     response = requests.get(job_url, headers=DETAILS_HEADERS, verify=True)
     if response.status_code != 200:
@@ -72,22 +99,24 @@ def parse_description_internal(job_url):
     container = soup.find(id=DESCRIPTION_ELEMENT_ID)
     if container is None:
         return None
-    return container.get_text("\n", strip=True)
+    return clean_description(container)
 
 
 def parse_description_external(job_url):
     """Build a placeholder description for an externally hosted posting.
 
     External postings have no description on arbeitsagentur.de, so the text
-    points the reader to the external page instead.
+    links the reader to the external page instead.
 
     Args:
         job_url: URL of the external job posting.
 
     Returns:
-        A short string referring to the external posting.
+        A short HTML string linking to the external posting.
     """
-    return f"See details at {job_url}"
+    url = escape(job_url)
+    return (f'<p>See details at <a href="{url}" target="_blank" '
+            f'rel="noopener">{url}</a></p>')
 
 
 def normalize(job):
@@ -119,17 +148,17 @@ def normalize(job):
 
 
 def description(record):
-    """Return the description text for a normalized job record.
+    """Return the description for a normalized job record.
 
     Descriptions of internal postings are extracted from their detail page
     on arbeitsagentur.de. External postings have no description there, so
-    the text points the reader to the external page instead.
+    the text links the reader to the external page instead.
 
     Args:
         record: A job record as returned by normalize().
 
     Returns:
-        Plain-text job description, or None if it cannot be fetched.
+        Job description as an HTML string, or None if it cannot be fetched.
     """
     if record["url"].startswith(JOB_URL_PREFIX):
         return parse_description_internal(record["url"])

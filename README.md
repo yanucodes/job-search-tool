@@ -68,9 +68,10 @@ Create a module in `jobboards/` that provides four functions:
 - `normalize(job)` — convert a raw job to the standard record: a dictionary
   with `id`, `title`, `company`, `location`, `published` and `url` keys.
   `id` must be stable, it is what the seen-job tracking is keyed on.
-- `description(record)` — return the plain-text description for a
-  normalized record (or `None` if unavailable). This is the only function
-  allowed to be slow; it is called once per job shown to the user.
+- `description(record)` — return the description for a normalized record
+  as an HTML string safe to embed in a page (or `None` if unavailable).
+  This is the only function allowed to be slow; it is called once per job
+  shown to the user.
 
 Then register the module in `SERVICES` in `search.py`. See
 `jobboards/arbeitsagentur.py` for a reference implementation.

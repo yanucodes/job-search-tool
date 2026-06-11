@@ -118,10 +118,15 @@ select:focus {
 }
 
 .description {
-    white-space: pre-line;
     border-top: 1px solid #d6e6dc;
     padding-top: 12px;
     margin-top: 12px;
+}
+
+.description p,
+.description ul,
+.description ol {
+    margin: 0 0 12px;
 }
 
 .status {
