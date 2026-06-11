@@ -132,7 +132,7 @@ def search(params):
     jobs = []
     page = 1
     while True:
-        query = query = {**params, "page": str(page)}
+        query = {**params, "page": str(page)}
         response = requests.get(API_URL, headers=HEADERS, params=query,
                                 verify=True)
         if response.status_code != 200:
