@@ -11,7 +11,34 @@ import search
 
 SEEN_FILE = "seen.json"
 APPLICATIONS_FILE = "applications.json"
+APPLICATIONS_TABLE = "applications.tex"
 STATUSES = ["to apply", "applied", "interview", "offer", "rejected"]
+LATEX_SPECIAL_CHARS = {
+    "\\": r"\textbackslash{}",
+    "&": r"\&",
+    "%": r"\%",
+    "$": r"\$",
+    "#": r"\#",
+    "_": r"\_",
+    "{": r"\{",
+    "}": r"\}",
+    "~": r"\textasciitilde{}",
+    "^": r"\textasciicircum{}",
+}
+TABLE_HEADER = r"""\documentclass{article}
+\usepackage[margin=2cm]{geometry}
+\usepackage{longtable}
+\usepackage{hyperref}
+\begin{document}
+\section*{Job applications}
+\begin{longtable}{rlllll}
+\# & Saved & Title & Company & Location & Status \\
+\hline
+\endhead
+"""
+TABLE_FOOTER = r"""\end{longtable}
+\end{document}
+"""
 
 
 def output_path(filename):
@@ -70,13 +97,48 @@ def load_applications():
 
 
 def save_applications(applications):
-    """Write the application list to the output directory.
+    """Write the application list and its LaTeX table to the output directory.
 
     Args:
         applications: List of application dictionaries to persist.
     """
     with open(output_path(APPLICATIONS_FILE), "w", encoding="utf-8") as f:
         json.dump(applications, f, indent=2, ensure_ascii=False)
+    write_latex_table(applications)
+
+
+def escape_latex(text):
+    """Escape characters that have a special meaning in LaTeX.
+
+    Args:
+        text: Plain text to escape.
+
+    Returns:
+        Text safe to place in a LaTeX document.
+    """
+    return "".join(LATEX_SPECIAL_CHARS.get(char, char) for char in text)
+
+
+def write_latex_table(applications):
+    """Write the application list as a LaTeX table to the output directory.
+
+    Each row shows when the job was saved, its title (linked to the
+    posting), company, location and the current application status.
+
+    Args:
+        applications: List of application dictionaries.
+    """
+    rows = []
+    for i, application in enumerate(applications):
+        title = (f"\\href{{{application['url']}}}"
+                 f"{{{escape_latex(application['title'])}}}")
+        cells = [str(i + 1), application["saved"], title,
+                 escape_latex(application["company"]),
+                 escape_latex(application["location"]),
+                 escape_latex(application["status"])]
+        rows.append(" & ".join(cells) + " \\\\\n")
+    with open(output_path(APPLICATIONS_TABLE), "w", encoding="utf-8") as f:
+        f.write(TABLE_HEADER + "".join(rows) + TABLE_FOOTER)
 
 
 def add_application(service, record):
