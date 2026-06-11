@@ -1,0 +1,142 @@
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, sans-serif;
+    background-color: #eef6f0;
+    padding: 32px 20px;
+    color: #1f2a26;
+    max-width: 880px;
+    margin: 0 auto;
+    line-height: 1.5;
+}
+
+h1 {
+    text-align: center;
+    color: #1f2a26;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 0 0 28px;
+}
+
+h2 {
+    color: #2f4a3e;
+    font-weight: 600;
+    margin: 24px 10px 12px;
+}
+
+a {
+    color: #2f7a5a;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+.card {
+    background-color: #ffffff;
+    border: 1px solid #d6e6dc;
+    padding: 20px 22px;
+    margin-bottom: 16px;
+    border-radius: 10px;
+    box-shadow: 0 1px 2px rgba(30, 60, 45, 0.04);
+    transition: box-shadow 0.15s ease;
+}
+
+.card:hover {
+    box-shadow: 0 4px 14px rgba(30, 60, 45, 0.08);
+}
+
+.card h3 {
+    margin: 0 0 4px;
+    font-size: 1.15rem;
+    color: #1f2a26;
+}
+
+.card p {
+    margin: 0 0 12px;
+    color: #5a6a63;
+}
+
+.hint {
+    font-size: 0.9em;
+    color: #5a6a63;
+    margin-top: 0.9em;
+}
+
+.button,
+button,
+input[type="submit"] {
+    display: inline-block;
+    box-sizing: border-box;
+    border: 1px solid #c8dccf;
+    border-radius: 6px;
+    padding: 7px 14px;
+    background-color: #ffffff;
+    color: #1f2a26;
+    font: inherit;
+    font-size: 0.9em;
+    cursor: pointer;
+    transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+
+.button:hover,
+button:hover,
+input[type="submit"]:hover {
+    background-color: #e3efe6;
+    border-color: #8fb8a0;
+}
+
+.toolbar {
+    margin: 0 0 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.toolbar form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+select {
+    border: 1px solid #c8dccf;
+    border-radius: 6px;
+    padding: 7px 10px;
+    background-color: #ffffff;
+    font: inherit;
+    font-size: 0.95em;
+    color: #1f2a26;
+}
+
+select:focus {
+    outline: none;
+    border-color: #4a9a78;
+    box-shadow: 0 0 0 3px rgba(74, 154, 120, 0.18);
+}
+
+.description {
+    white-space: pre-line;
+    border-top: 1px solid #d6e6dc;
+    padding-top: 12px;
+    margin-top: 12px;
+}
+
+.status {
+    display: inline-block;
+    background-color: #e3efe6;
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 0.85em;
+    color: #2f4a3e;
+}
+
+details summary {
+    cursor: pointer;
+}
+
+details[open] summary {
+    margin-bottom: 8px;
+}
