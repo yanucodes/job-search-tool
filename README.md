@@ -3,8 +3,9 @@
 A tool that searches job boards, shows each new posting with its
 description, and lets you save it to an application list or discard it.
 Jobs you have already reviewed are remembered by their job ID and are not
-shown again. It comes with a command-line interface and a small web
-interface. Currently supported job board:
+shown again. Searches are configured with a command-line interface;
+reviewing jobs and managing applications happens in a small web interface.
+Currently supported job board:
 [arbeitsagentur.de](https://www.arbeitsagentur.de).
 
 ## Setup
@@ -15,7 +16,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## Usage
+## Configuration
 
 ```sh
 python main.py
@@ -23,15 +24,8 @@ python main.py
 
 From the main menu you can:
 
-1. **Search and review new jobs** — runs every saved search and shows each
-   unseen job with its description. For each job choose `s` to save it to
-   the application list, `d` to discard it, or `q` to stop reviewing
-   (remaining jobs stay unseen and come up next time).
-2. **Show application list** — lists the jobs you saved with their status,
-   and lets you update a status (`to apply`, `applied`, `interview`,
-   `offer`, `rejected`).
-3. **Show search configurations** — add, update or remove saved searches.
-4. **Set output directory** — choose where results are stored.
+1. **Show search configurations** — add, update or remove saved searches.
+2. **Set output directory** — choose where results are stored.
 
 ## Web interface
 

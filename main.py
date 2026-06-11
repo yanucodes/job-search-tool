@@ -1,8 +1,10 @@
-"""Command-line interface for job search."""
+"""Command-line interface to configure the job search.
+
+Searching and reviewing jobs happens in the web interface (app.py).
+"""
 
 import search
 import sys
-import tracker
 
 
 def display_menu(menu):
@@ -93,69 +95,6 @@ def configure_output_dir():
         print(f"Output directory set to: {saved}")
 
 
-def display_job(service, record, position, total):
-    """Display a job record with its description.
-
-    Args:
-        service: Name of the job board the job came from.
-        record: Normalized job record.
-        position: 1-based position of the job in the review session.
-        total: Total number of jobs in the review session.
-    """
-    print(f"\n--- Job {position}/{total} ({service}) ---")
-    print(f"{record['title']}")
-    print(f"{record['company']} - {record['location']}")
-    print(f"Published: {record['published']}")
-    print(f"{record['url']}\n")
-    description = search.SERVICES[service].description(record)
-    print(description or "No description available.")
-
-
-def review_jobs():
-    """Search for new jobs and review them one by one.
-
-    Each unseen job is displayed with its description, and the user can
-    save it to the application list or discard it. Either way the job is
-    marked as seen. Quitting leaves the remaining jobs unseen, so they
-    come up again in the next review.
-    """
-    print("Searching...")
-    jobs = search.find_new_jobs(tracker.load_seen())
-    if not jobs:
-        print("No new jobs found.")
-        return
-    print(f"Found {len(jobs)} new jobs.")
-    for i, (service, record) in enumerate(jobs):
-        display_job(service, record, i + 1, len(jobs))
-        while True:
-            choice = input("\n[s]ave to apply later, [d]iscard, [q]uit: ")
-            if choice in ("s", "d", "q"):
-                break
-            print("Invalid choice.")
-        if choice == "q":
-            return
-        tracker.mark_seen(service, record["id"])
-        if choice == "s":
-            tracker.add_application(service, record)
-            print("Saved to application list.")
-
-
-def display_applications():
-    """Display the list of jobs the user plans to apply for.
-
-    Returns:
-        The displayed list of application dictionaries.
-    """
-    applications = tracker.load_applications()
-    if not applications:
-        print("No saved applications yet.")
-    for i, application in enumerate(applications):
-        print(f"{i+1}. [{application['status']}] {application['title']} - "
-              f"{application['company']} ({application['saved']})")
-        print(f"   {application['url']}")
-    return applications
-
-
 def select_number(prompt, count):
     """Prompt the user to pick a number between 1 and count.
 
@@ -178,31 +117,6 @@ def select_number(prompt, count):
         print("Invalid choice.")
 
 
-def update_application_status():
-    """Prompt the user to select an application and set its status."""
-    applications = display_applications()
-    if not applications:
-        return
-    index = select_number("Select an application by number: ",
-                          len(applications))
-    if index is None:
-        return
-    for i, status in enumerate(tracker.STATUSES):
-        print(f"{i+1}. {status}")
-    status_index = select_number("Select a new status by number: ",
-                                 len(tracker.STATUSES))
-    if status_index is not None:
-        tracker.update_status(index, tracker.STATUSES[status_index])
-
-
-def show_applications_menu():
-    """Display saved applications and the applications menu."""
-    display_applications()
-    display_menu(APPLICATIONS_MENU)
-    choice = input("Enter your choice: ")
-    handle_menu_choice(choice, APPLICATIONS_MENU)
-
-
 def go_back():
     """Placeholder for menu navigation. Returns to the previous menu."""
     pass
@@ -214,16 +128,9 @@ def exit_program():
 
 
 MAIN_MENU = {
-    "1": ("Search and review new jobs", review_jobs),
-    "2": ("Show application list", show_applications_menu),
-    "3": ("Show search configurations", show_config_menu),
-    "4": ("Set output directory", configure_output_dir),
+    "1": ("Show search configurations", show_config_menu),
+    "2": ("Set output directory", configure_output_dir),
     "0": ("Exit", exit_program),
-}
-
-APPLICATIONS_MENU = {
-    "1": ("Update application status", update_application_status),
-    "0": ("Back", go_back),
 }
 
 CONFIG_MENU = {
