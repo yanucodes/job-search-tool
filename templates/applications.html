@@ -4,7 +4,12 @@
 
 {% block content %}
     <h1>My applications</h1>
-    {% if not applications %}
+    {% if applications %}
+    <div class="toolbar">
+        <a href="{{ url_for('applications_pdf') }}" class="button"
+           target="_blank">Generate PDF</a>
+    </div>
+    {% else %}
     <h2>No saved applications yet.</h2>
     {% endif %}
     {% for application in applications %}

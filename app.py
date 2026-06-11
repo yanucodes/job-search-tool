@@ -1,11 +1,17 @@
 """Web interface for job search."""
 
-from flask import Flask, redirect, render_template, request, url_for
+import os
+import subprocess
+
+from flask import Flask, redirect, render_template, request, send_file, \
+    url_for
 
 import search
 import tracker
 
 app = Flask(__name__)
+
+APPLICATIONS_PDF = "applications.pdf"
 
 pending_jobs = None  # jobs found by the last search, None before the first
 
@@ -96,6 +102,21 @@ def update_status(index):
             and status in tracker.STATUSES):
         tracker.update_status(index, status)
     return redirect(url_for("applications"))
+
+
+@app.route("/applications/pdf")
+def applications_pdf():
+    """Generate a PDF summary of the application list and return it."""
+    tracker.write_latex_table(tracker.load_applications())
+    output_dir = search.get_output_dir()
+    result = subprocess.run(
+        ["pdflatex", "-interaction=nonstopmode", tracker.APPLICATIONS_TABLE],
+        cwd=output_dir, capture_output=True, text=True)
+    if result.returncode != 0:
+        return (f"pdflatex failed:\n{result.stdout}", 500,
+                {"Content-Type": "text/plain; charset=utf-8"})
+    return send_file(os.path.abspath(os.path.join(output_dir,
+                                                  APPLICATIONS_PDF)))
 
 
 if __name__ == "__main__":
