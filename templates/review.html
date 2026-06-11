@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Review new jobs{% endblock %}
+
+{% block content %}
+    <h1>Review new jobs</h1>
+    <div class="toolbar">
+        <form method="POST" action="{{ url_for('refresh_jobs') }}">
+            <input type="submit" value="Search again">
+        </form>
+        {% if job %}
+            <span class="hint">{{ total }} new job(s) to review</span>
+        {% endif %}
+    </div>
+    {% if job %}
+    <div class="card">
+        <h3>{{ job.title }}</h3>
+        <p>{{ job.company }} - {{ job.location }}</p>
+        <p>Published: {{ job.published }} ({{ service }}) ·
+           <a href="{{ job.url }}" target="_blank">open posting</a></p>
+        <div class="toolbar">
+            <form method="POST" action="{{ url_for('resolve_job', action='save') }}">
+                <input type="hidden" name="service" value="{{ service }}">
+                <input type="hidden" name="job_id" value="{{ job.id }}">
+                <input type="submit" value="Add to my list">
+            </form>
+            <form method="POST" action="{{ url_for('resolve_job', action='seen') }}">
+                <input type="hidden" name="service" value="{{ service }}">
+                <input type="hidden" name="job_id" value="{{ job.id }}">
+                <input type="submit" value="Mark as seen">
+            </form>
+        </div>
+        <div class="description">{{ description or "No description available." }}</div>
+    </div>
+    {% else %}
+    <h2>No new jobs to review.</h2>
+    {% endif %}
+{% endblock %}
