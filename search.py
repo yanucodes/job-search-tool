@@ -89,6 +89,34 @@ def set_output_dir(path):
     return expanded
 
 
+def find_new_jobs(seen):
+    """Run all saved searches and return jobs the user has not seen yet.
+
+    Results are normalized by their job board module and de-duplicated
+    across searches.
+
+    Args:
+        seen: Set of (service, job_id) tuples the user has already seen.
+
+    Returns:
+        List of (service, record) tuples for unseen jobs, where record is
+        a normalized job record.
+    """
+    new_jobs = []
+    found = set(seen)
+    for entry in get_searches():
+        service = entry["service"]
+        results = SERVICES[service].search(entry["config"])
+        if results is None:
+            continue
+        for job in results:
+            record = SERVICES[service].normalize(job)
+            if (service, record["id"]) not in found:
+                found.add((service, record["id"]))
+                new_jobs.append((service, record))
+    return new_jobs
+
+
 def add_config(search_service):
     """Add a new search configuration for a given service and save it.
 
