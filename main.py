@@ -2,6 +2,7 @@
 
 import search
 import sys
+import tracker
 
 
 def display_menu(menu):
@@ -101,6 +102,53 @@ def configure_output_dir():
         print(f"Output directory set to: {saved}")
 
 
+def display_job(service, record, position, total):
+    """Display a job record with its description.
+
+    Args:
+        service: Name of the job board the job came from.
+        record: Normalized job record.
+        position: 1-based position of the job in the review session.
+        total: Total number of jobs in the review session.
+    """
+    print(f"\n--- Job {position}/{total} ({service}) ---")
+    print(f"{record['title']}")
+    print(f"{record['company']} - {record['location']}")
+    print(f"Published: {record['published']}")
+    print(f"{record['url']}\n")
+    description = search.SERVICES[service].description(record)
+    print(description or "No description available.")
+
+
+def review_jobs():
+    """Search for new jobs and review them one by one.
+
+    Each unseen job is displayed with its description, and the user can
+    save it to the application list or discard it. Either way the job is
+    marked as seen. Quitting leaves the remaining jobs unseen, so they
+    come up again in the next review.
+    """
+    print("Searching...")
+    jobs = search.find_new_jobs(tracker.load_seen())
+    if not jobs:
+        print("No new jobs found.")
+        return
+    print(f"Found {len(jobs)} new jobs.")
+    for i, (service, record) in enumerate(jobs):
+        display_job(service, record, i + 1, len(jobs))
+        while True:
+            choice = input("\n[s]ave to apply later, [d]iscard, [q]uit: ")
+            if choice in ("s", "d", "q"):
+                break
+            print("Invalid choice.")
+        if choice == "q":
+            return
+        tracker.mark_seen(service, record["id"])
+        if choice == "s":
+            tracker.add_application(service, record)
+            print("Saved to application list.")
+
+
 def go_back():
     """Placeholder for menu navigation. Returns to the previous menu."""
     pass
@@ -112,8 +160,9 @@ def exit_program():
 
 
 MAIN_MENU = {
-    "1": ("Show search configurations", show_config_menu),
-    "2": ("Set output directory", configure_output_dir),
+    "1": ("Search and review new jobs", review_jobs),
+    "2": ("Show search configurations", show_config_menu),
+    "3": ("Set output directory", configure_output_dir),
     "0": ("Exit", exit_program),
 }
 
