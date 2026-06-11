@@ -2,7 +2,10 @@
 Module to configure and run search on arbeitsagentur.de
 """
 
+from urllib.parse import quote
+
 import requests
+from bs4 import BeautifulSoup
 
 
 HEADERS = {
@@ -38,6 +41,78 @@ PARAMS_DEFAULTS = {
     "arbeitszeit": "vz;tz",
     "umkreis": "25"
 }
+JOB_URL_PREFIX = 'https://www.arbeitsagentur.de/jobsuche/jobdetail/'
+DETAILS_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                  "AppleWebKit/537.36 (KHTML, like Gecko) "
+                  "Chrome/120.0.0.0 Safari/537.36"
+}
+DESCRIPTION_ELEMENT_ID = "detail-beschreibung-text-container"
+
+
+def parse_description_internal(job_url):
+    """Fetch an internal posting's page and extract its description text.
+
+    Downloads the job detail page hosted on arbeitsagentur.de and returns the
+    text of the description element.
+
+    Args:
+        job_url: URL of the internal job detail page.
+
+    Returns:
+        Plain-text job description, or None if the request fails or the
+        description element is not found.
+    """
+    response = requests.get(job_url, headers=DETAILS_HEADERS, verify=True)
+    if response.status_code != 200:
+        print(f"Status code: {response.status_code}. Failed to fetch job "
+              f"details from {job_url}")
+        return None
+    soup = BeautifulSoup(response.text, "html.parser")
+    container = soup.find(id=DESCRIPTION_ELEMENT_ID)
+    if container is None:
+        return None
+    return container.get_text("\n", strip=True)
+
+
+def parse_description_external(job_url):
+    """Build a placeholder description for an externally hosted posting.
+
+    External postings have no description on arbeitsagentur.de, so the text
+    points the reader to the external page instead.
+
+    Args:
+        job_url: URL of the external job posting.
+
+    Returns:
+        A short string referring to the external posting.
+    """
+    return f"See details at {job_url}"
+
+
+def parse_job(job):
+    """Add 'job_url' and 'job_description' fields to a job dictionary.
+
+    For internal postings the URL is built from JOB_URL_PREFIX and the
+    posting's reference number, and the description is extracted from that
+    page. For external postings (those carrying an "externeUrl") the URL is
+    the external one and the description points to it.
+
+    Args:
+        job: A job dictionary as returned by search().
+
+    Returns:
+        The same dictionary, with "job_url" and "job_description" added.
+    """
+    external_url = job.get("externeUrl")
+    if external_url:
+        job["job_url"] = external_url
+        job["job_description"] = parse_description_external(external_url)
+    else:
+        job_url = JOB_URL_PREFIX + quote(job["refnr"], safe="")
+        job["job_url"] = job_url
+        job["job_description"] = parse_description_internal(job_url)
+    return job
 
 
 def search(params):
