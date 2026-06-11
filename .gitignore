@@ -208,3 +208,10 @@ __marimo__/
 
 #Generated files
 config.json
+
+# Example templates from another project, used as reference only
+temp/
+
+# LaTeX build artifacts
+*.aux
+*.out
