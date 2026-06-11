@@ -149,6 +149,69 @@ def review_jobs():
             print("Saved to application list.")
 
 
+def display_applications():
+    """Display the list of jobs the user plans to apply for.
+
+    Returns:
+        The displayed list of application dictionaries.
+    """
+    applications = tracker.load_applications()
+    if not applications:
+        print("No saved applications yet.")
+    for i, application in enumerate(applications):
+        print(f"{i+1}. [{application['status']}] {application['title']} - "
+              f"{application['company']} ({application['saved']})")
+        print(f"   {application['url']}")
+    return applications
+
+
+def select_number(prompt, count):
+    """Prompt the user to pick a number between 1 and count.
+
+    Args:
+        prompt: Text to show when asking for input.
+        count: Highest valid number.
+
+    Returns:
+        0-based index of the selection, or None if the user cancels.
+    """
+    print("0. Cancel")
+    while True:
+        choice = input(prompt)
+        if choice.isdigit():
+            choice = int(choice)
+            if not choice:
+                return None
+            elif 0 < choice <= count:
+                return choice - 1
+        print("Invalid choice.")
+
+
+def update_application_status():
+    """Prompt the user to select an application and set its status."""
+    applications = display_applications()
+    if not applications:
+        return
+    index = select_number("Select an application by number: ",
+                          len(applications))
+    if index is None:
+        return
+    for i, status in enumerate(tracker.STATUSES):
+        print(f"{i+1}. {status}")
+    status_index = select_number("Select a new status by number: ",
+                                 len(tracker.STATUSES))
+    if status_index is not None:
+        tracker.update_status(index, tracker.STATUSES[status_index])
+
+
+def show_applications_menu():
+    """Display saved applications and the applications menu."""
+    display_applications()
+    display_menu(APPLICATIONS_MENU)
+    choice = input("Enter your choice: ")
+    handle_menu_choice(choice, APPLICATIONS_MENU)
+
+
 def go_back():
     """Placeholder for menu navigation. Returns to the previous menu."""
     pass
@@ -161,9 +224,15 @@ def exit_program():
 
 MAIN_MENU = {
     "1": ("Search and review new jobs", review_jobs),
-    "2": ("Show search configurations", show_config_menu),
-    "3": ("Set output directory", configure_output_dir),
+    "2": ("Show application list", show_applications_menu),
+    "3": ("Show search configurations", show_config_menu),
+    "4": ("Set output directory", configure_output_dir),
     "0": ("Exit", exit_program),
+}
+
+APPLICATIONS_MENU = {
+    "1": ("Update application status", update_application_status),
+    "0": ("Back", go_back),
 }
 
 CONFIG_MENU = {
