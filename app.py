@@ -147,6 +147,21 @@ def update_priority(index):
     return redirect(url_for("applications"))
 
 
+@app.route("/applications/<int:index>/delete", methods=["POST"])
+def delete_application(index):
+    """Remove a saved job from the application list.
+
+    The job stays in the seen list, so it will not reappear in future
+    searches.
+
+    Args:
+        index: Index of the application in the saved list.
+    """
+    if 0 <= index < len(tracker.load_applications()):
+        tracker.delete_application(index)
+    return redirect(url_for("applications"))
+
+
 @app.route("/applications/pdf")
 def applications_pdf():
     """Generate a PDF summary of the application list and return it."""

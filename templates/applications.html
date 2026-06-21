@@ -65,6 +65,11 @@
                     {% endfor %}
                 </select>
             </form>
+            <form method="POST"
+                  action="{{ url_for('delete_application', index=index) }}"
+                  onsubmit="return confirm('Remove this job from your applications?');">
+                <input type="submit" value="Delete">
+            </form>
         </details>
     </div>
     {% endfor %}

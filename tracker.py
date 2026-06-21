@@ -277,6 +277,23 @@ def update_status(index, status):
     save_applications(applications)
 
 
+def delete_application(index):
+    """Remove a saved job from the application list.
+
+    The job is kept in the seen list (re-asserted here in case the entry
+    predates seen tracking or the seen file was cleared), so it will not
+    reappear in future searches.
+
+    Args:
+        index: Index of the application in the saved list.
+    """
+    applications = load_applications()
+    application = applications[index]
+    mark_seen(application["service"], application["id"])
+    applications.pop(index)
+    save_applications(applications)
+
+
 def update_priority(index, priority):
     """Set or clear the priority of a saved job.
 
