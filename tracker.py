@@ -15,6 +15,8 @@ APPLICATIONS_TABLE = "applications.tex"
 TIMELINE_FIELDS = ["applied", "invited", "interview", "decided"]
 DECISIONS = ["offer", "rejected"]
 STATUSES = ["to apply", "applied", "invited", "interview"] + DECISIONS
+PRIORITIES = [1, 2, 3]
+PRIORITY_LABELS = {1: "high", 2: "moderate", 3: "low"}
 LATEX_SPECIAL_CHARS = {
     "\\": r"\textbackslash{}",
     "&": r"\&",
@@ -195,9 +197,9 @@ def write_latex_table(applications):
         applications: List of application dictionaries.
     """
     rows = []
-    for application in applications:
-        if not application.get("applied"):
-            continue
+    applied = sorted((a for a in applications if a.get("applied")),
+                     key=lambda a: a["applied"])
+    for application in applied:
         rows.append(f"{latex_job_cell(application)} & "
                     f"{latex_timeline_cell(application)} \\\\\n\\hline\n")
     header = TABLE_HEADER % format_date(datetime.date.today().isoformat())
@@ -205,21 +207,27 @@ def write_latex_table(applications):
         f.write(header + "".join(rows) + TABLE_FOOTER)
 
 
-def add_application(service, record):
+def add_application(service, record, priority=None):
     """Add a job to the application list with an empty timeline.
 
     Args:
         service: Name of the job board the job came from.
         record: Normalized job record as returned by the board's normalize().
+        priority: Optional priority level (one of PRIORITIES). When given, it
+            is stored under "priority"; when omitted the key is left out, which
+            marks the job as having no chosen priority.
     """
     applications = load_applications()
-    applications.append({
+    application = {
         "service": service,
         "saved": datetime.date.today().isoformat(),
         **{field: "" for field in TIMELINE_FIELDS},
         "decision": "",
         **record,
-    })
+    }
+    if priority in PRIORITIES:
+        application["priority"] = priority
+    applications.append(application)
     save_applications(applications)
 
 
@@ -266,4 +274,21 @@ def update_status(index, status):
     for later_field in TIMELINE_FIELDS[position + 1:]:
         application[later_field] = ""
     application["decision"] = status if status in DECISIONS else ""
+    save_applications(applications)
+
+
+def update_priority(index, priority):
+    """Set or clear the priority of a saved job.
+
+    Args:
+        index: Index of the application in the saved list.
+        priority: New priority (one of PRIORITIES), or None to clear it. When
+            cleared, the "priority" key is removed so the job has no priority.
+    """
+    applications = load_applications()
+    application = applications[index]
+    if priority in PRIORITIES:
+        application["priority"] = priority
+    else:
+        application.pop("priority", None)
     save_applications(applications)

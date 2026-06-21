@@ -20,6 +20,11 @@
         <details {% if expand %}open{% endif %}>
             <summary>
                 <span class="status">{{ application.status }}</span>
+                {% if application.priority %}
+                <span class="priority">{{ priority_labels[application.priority] }} priority</span>
+                {% else %}
+                <span class="priority none">no priority</span>
+                {% endif %}
                 <strong>{{ application.title }}</strong> -
                 {{ application.company }} ({{ application.saved }})
             </summary>
@@ -43,6 +48,20 @@
                     <option value="{{ status }}"
                             {% if status == application.status %}selected{% endif %}>
                         {{ status }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+            <form method="POST"
+                  action="{{ url_for('update_priority', index=index) }}">
+                <label for="priority-{{ index }}">Priority: </label>
+                <select id="priority-{{ index }}" name="priority"
+                        onchange="this.form.submit()">
+                    <option value="" {% if not application.priority %}selected{% endif %}>
+                        no priority</option>
+                    {% for level in priorities %}
+                    <option value="{{ level }}"
+                            {% if level == application.priority %}selected{% endif %}>
+                        {{ priority_labels[level] }}</option>
                     {% endfor %}
                 </select>
             </form>

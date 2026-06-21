@@ -22,6 +22,12 @@
             <form method="POST" action="{{ url_for('resolve_job', action='save') }}">
                 <input type="hidden" name="service" value="{{ service }}">
                 <input type="hidden" name="job_id" value="{{ job.id }}">
+                <select name="priority">
+                    <option value="" selected>no priority</option>
+                    {% for level in priorities %}
+                    <option value="{{ level }}">{{ priority_labels[level] }}</option>
+                    {% endfor %}
+                </select>
                 <input type="submit" value="Add to my list">
             </form>
             <form method="POST" action="{{ url_for('resolve_job', action='seen') }}">

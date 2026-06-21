@@ -43,7 +43,9 @@ def review():
     service, record = jobs[0]
     description = search.SERVICES[service].description(record)
     return render_template("review.html", service=service, job=record,
-                           description=description, total=len(jobs))
+                           description=description, total=len(jobs),
+                           priorities=tracker.PRIORITIES,
+                           priority_labels=tracker.PRIORITY_LABELS)
 
 
 @app.route("/review/search", methods=["POST"])
@@ -66,11 +68,14 @@ def resolve_job(action):
     """
     service = request.form["service"]
     job_id = request.form["job_id"]
+    raw = request.form.get("priority", "")
+    priority = int(raw) if raw.isdigit() and int(raw) in tracker.PRIORITIES \
+        else None
     for entry in get_pending_jobs():
         if entry[0] == service and entry[1]["id"] == job_id:
             tracker.mark_seen(service, job_id)
             if action == "save":
-                tracker.add_application(service, entry[1])
+                tracker.add_application(service, entry[1], priority)
             pending_jobs.remove(entry)
             break
     return redirect(url_for("review"))
@@ -94,15 +99,19 @@ def applications():
     for application in applications:
         application["status"] = tracker.get_status(application)
     entries = list(enumerate(applications))
+    to_apply = sorted((e for e in entries if e[1]["status"] == "to apply"),
+                      key=lambda e: e[1].get("priority", 99))
+    applied = sorted((e for e in entries if e[1]["status"] != "to apply"),
+                     key=lambda e: e[1].get("applied", ""))
     groups = [
-        ("To apply", [entry for entry in entries
-                      if entry[1]["status"] == "to apply"]),
-        ("Applied", [entry for entry in entries
-                     if entry[1]["status"] != "to apply"]),
+        ("To apply", to_apply),
+        ("Applied", applied),
     ]
     return render_template("applications.html", groups=groups,
                            empty=not applications,
                            statuses=tracker.STATUSES,
+                           priorities=tracker.PRIORITIES,
+                           priority_labels=tracker.PRIORITY_LABELS,
                            timeline_fields=tracker.TIMELINE_FIELDS,
                            expand=request.args.get("open") == "1")
 
@@ -120,6 +129,21 @@ def update_status(index):
     if (0 <= index < len(tracker.load_applications())
             and status in tracker.STATUSES):
         tracker.update_status(index, status)
+    return redirect(url_for("applications"))
+
+
+@app.route("/applications/<int:index>/priority", methods=["POST"])
+def update_priority(index):
+    """Set or clear the priority of a saved job.
+
+    Args:
+        index: Index of the application in the saved list.
+    """
+    raw = request.form.get("priority", "")
+    priority = int(raw) if raw.isdigit() and int(raw) in tracker.PRIORITIES \
+        else None
+    if 0 <= index < len(tracker.load_applications()):
+        tracker.update_priority(index, priority)
     return redirect(url_for("applications"))
 
 

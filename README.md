@@ -40,13 +40,20 @@ and output files.
 - **Review new jobs** (`/review`) — searches all job boards once and shows
   one new job at a time with its description. *Add to my list* saves the
   job to the application list, *Mark as seen* discards it; either way the
-  next job appears. *Search again* re-runs the search.
+  next job appears. *Search again* re-runs the search. Before saving you
+  can optionally pick a priority (`high`, `moderate`, `low`) from the
+  dropdown next to *Add to my list*; leaving it on *no priority* saves the
+  job without one.
 - **My applications** (`/applications`) — lists the saved jobs with their
-  status, grouped into jobs still to apply for and jobs already applied
-  to. Click an entry to see its details and change the status
+  status and priority, grouped into jobs still to apply for and jobs
+  already applied to. Each entry shows its status and priority at a glance.
+  Click an entry to see its details and change the status
   (`to apply`, `applied`, `invited`, `interview`, `offer`, `rejected`);
   the date of each status change is recorded automatically, building a
-  timeline of the application process.
+  timeline of the application process. You can also set or clear the
+  priority here. Jobs still to apply for are ordered by priority (highest
+  first, unprioritised last); jobs already applied to are ordered by the
+  date you applied (oldest first).
 - **Generate PDF** (`/applications/pdf`) — compiles a PDF summary of the
   jobs you applied for and how each application went, using `pdflatex`
   (must be installed).
@@ -60,7 +67,9 @@ All results live in the configured output directory:
 - `applications.json` — the jobs you plan to apply for, with saved date and
   the timeline of the application process: the dates of applying, the
   interview invitation, the interview and the final decision, and what the
-  decision was.
+  decision was. A job with a chosen priority also has a `priority` key
+  (`1` high, `2` moderate, `3` low); the key is absent when no priority is
+  set.
 - `applications.tex` — a LaTeX table summarizing the jobs you applied for
   and the outcomes, regenerated on every change. Compile it with
   `pdflatex applications.tex` for a PDF overview.

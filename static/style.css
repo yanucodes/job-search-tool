@@ -144,6 +144,20 @@ select:focus {
     color: #2f4a3e;
 }
 
+.priority {
+    display: inline-block;
+    background-color: #f3e6e6;
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 0.85em;
+    color: #7a3b3b;
+}
+
+.priority.none {
+    background-color: #eeeeee;
+    color: #888888;
+}
+
 details summary {
     cursor: pointer;
 }
