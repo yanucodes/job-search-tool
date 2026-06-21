@@ -2,11 +2,13 @@ import json
 import os
 
 from jobboards import arbeitsagentur
+from jobboards import mock
 
 CONFIG_FILE = "config.json"
 DEFAULT_OUTPUT_DIR = "results"
 SERVICES = {
-    "arbeitsagentur": arbeitsagentur
+    "arbeitsagentur": arbeitsagentur,
+    "mock": mock,
 }
 
 
