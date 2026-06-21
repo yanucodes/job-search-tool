@@ -1,0 +1,56 @@
+[
+  {
+    "id": "DEMO-001",
+    "title": "Python Backend Developer (m/w/d)",
+    "company": "Beispiel Tech GmbH",
+    "location": "Heidelberg (hybrid)",
+    "published": "2026-06-12",
+    "url": "https://example.com/demo/jobs/python-backend",
+    "description": "<p><strong>Demo posting — sample data, not a real vacancy.</strong></p><p>We are looking for a backend developer to help build the API behind our product. You will work in a small team that values tested, maintainable code.</p><ul><li>Design and build REST APIs with <strong>FastAPI</strong></li><li>Model data in <strong>PostgreSQL</strong> with SQLAlchemy</li><li>Write tests with pytest and keep CI green</li></ul><p>Home office friendly. German B2 and English required.</p>"
+  },
+  {
+    "id": "DEMO-002",
+    "title": "Backend Engineer – Medical Imaging",
+    "company": "Muster Medical Systems AG",
+    "location": "Mannheim",
+    "published": "2026-06-11",
+    "url": "https://example.com/demo/jobs/medical-imaging",
+    "description": "<p><strong>Demo posting — sample data, not a real vacancy.</strong></p><p>Join the team building the image-processing pipeline behind our diagnostic platform. A scientific or imaging background is a strong plus.</p><ul><li>Process and analyse imaging data in <strong>Python</strong> (NumPy, SciPy)</li><li>Build services that turn raw scans into structured results</li><li>Collaborate with clinicians and data scientists</li></ul>"
+  },
+  {
+    "id": "DEMO-003",
+    "title": "iOS Developer (Swift / SwiftUI)",
+    "company": "Pixel Muster Studio",
+    "location": "Remote (Germany)",
+    "published": "2026-06-10",
+    "url": "https://example.com/demo/jobs/ios-swiftui",
+    "description": "<p><strong>Demo posting — sample data, not a real vacancy.</strong></p><p>We craft small, delightful iOS apps and are looking for a developer who cares about the details.</p><ul><li>Build features in <strong>Swift</strong> and <strong>SwiftUI</strong></li><li>Work with Swift Concurrency and SwiftData</li><li>Ship to the App Store and iterate from feedback</li></ul>"
+  },
+  {
+    "id": "DEMO-004",
+    "title": "Data Engineer (Python)",
+    "company": "Orbit Beispiel Labs",
+    "location": "Karlsruhe",
+    "published": "2026-06-09",
+    "url": "https://example.com/demo/jobs/data-engineer",
+    "description": "<p><strong>Demo posting — sample data, not a real vacancy.</strong></p><p>Help us move, clean and serve data reliably. You enjoy turning messy inputs into trustworthy datasets.</p><ul><li>Build data pipelines in <strong>Python</strong></li><li>Work with pandas, SQL and scheduled jobs</li><li>Care about correctness and reproducibility</li></ul>"
+  },
+  {
+    "id": "DEMO-005",
+    "title": "Software Engineer – Scientific Computing",
+    "company": "Nebula Beispiel GmbH",
+    "location": "Heidelberg",
+    "published": "2026-06-08",
+    "url": "https://example.com/demo/jobs/scientific-computing",
+    "description": "<p><strong>Demo posting — sample data, not a real vacancy.</strong></p><p>We build software for research groups and need an engineer comfortable bridging science and clean code.</p><ul><li>Translate scientific methods into maintainable <strong>Python</strong></li><li>Profile and optimise numerical code</li><li>Write documentation researchers actually read</li></ul>"
+  },
+  {
+    "id": "DEMO-006",
+    "title": "Full-Stack Python Developer (m/w/d)",
+    "company": "Demo Solutions GmbH",
+    "location": "Remote / Heidelberg",
+    "published": "2026-06-07",
+    "url": "https://example.com/demo/jobs/full-stack-python",
+    "description": "<p><strong>Demo posting — sample data, not a real vacancy.</strong></p><p>Own features end to end, from the database to the page. Comfortable picking up whatever the task needs.</p><ul><li>Backend in <strong>Python</strong> (Flask / FastAPI)</li><li>A bit of HTML, CSS and JavaScript on the front end</li><li>Deploy and keep things running</li></ul>"
+  }
+]
