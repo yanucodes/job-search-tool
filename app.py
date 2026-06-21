@@ -103,7 +103,8 @@ def applications():
     return render_template("applications.html", groups=groups,
                            empty=not applications,
                            statuses=tracker.STATUSES,
-                           timeline_fields=tracker.TIMELINE_FIELDS)
+                           timeline_fields=tracker.TIMELINE_FIELDS,
+                           expand=request.args.get("open") == "1")
 
 
 @app.route("/applications/<int:index>/status", methods=["POST"])

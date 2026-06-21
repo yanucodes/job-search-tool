@@ -17,7 +17,7 @@
     <h2>{{ heading }}</h2>
     {% for index, application in group %}
     <div class="card">
-        <details>
+        <details {% if expand %}open{% endif %}>
             <summary>
                 <span class="status">{{ application.status }}</span>
                 <strong>{{ application.title }}</strong> -
