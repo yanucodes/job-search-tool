@@ -207,7 +207,7 @@ def write_latex_table(applications):
         f.write(header + "".join(rows) + TABLE_FOOTER)
 
 
-def add_application(service, record, priority=None):
+def add_application(service, record, priority=None, applied=""):
     """Add a job to the application list with an empty timeline.
 
     Args:
@@ -216,6 +216,9 @@ def add_application(service, record, priority=None):
         priority: Optional priority level (one of PRIORITIES). When given, it
             is stored under "priority"; when omitted the key is left out, which
             marks the job as having no chosen priority.
+        applied: Optional ISO date (YYYY-MM-DD) the user applied on. When given
+            it is stored in the "applied" timeline field, which marks the job
+            as already applied to; when omitted the timeline starts empty.
     """
     applications = load_applications()
     application = {
@@ -225,6 +228,8 @@ def add_application(service, record, priority=None):
         "decision": "",
         **record,
     }
+    if applied:
+        application["applied"] = applied
     if priority in PRIORITIES:
         application["priority"] = priority
     applications.append(application)

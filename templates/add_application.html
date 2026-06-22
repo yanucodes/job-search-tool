@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Add application{% endblock %}
+
+{% block content %}
+    <h1>Add application</h1>
+    <div class="card">
+        {% if error %}
+        <p class="error">{{ error }}</p>
+        {% endif %}
+        <form method="POST" action="{{ url_for('new_application') }}"
+              class="stacked">
+            <label class="field">Title
+                <input type="text" name="title"
+                       value="{{ form.title }}" required>
+            </label>
+            <label class="field">Company
+                <input type="text" name="company"
+                       value="{{ form.company }}" required>
+            </label>
+            <label class="field">Location
+                <input type="text" name="location"
+                       value="{{ form.location }}" required>
+            </label>
+            <label class="field">URL
+                <input type="url" name="url"
+                       value="{{ form.url }}" required>
+            </label>
+            <label class="field">Published
+                <input type="date" name="published"
+                       value="{{ form.published }}">
+            </label>
+            <label class="field">Applied
+                <input type="date" name="applied"
+                       value="{{ form.applied }}">
+                <span class="hint">leave empty if not applied yet; may be a
+                    past date</span>
+            </label>
+            <label class="field">Priority
+                <select name="priority">
+                    <option value=""
+                            {% if not form.priority %}selected{% endif %}>
+                        no priority</option>
+                    {% for level in priorities %}
+                    <option value="{{ level }}"
+                            {% if form.priority == level|string %}selected{% endif %}>
+                        {{ priority_labels[level] }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <input type="submit" value="Add application">
+        </form>
+    </div>
+{% endblock %}

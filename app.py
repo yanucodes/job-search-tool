@@ -2,6 +2,7 @@
 
 import os
 import subprocess
+import uuid
 
 from flask import Flask, redirect, render_template, request, send_file, \
     url_for
@@ -114,6 +115,37 @@ def applications():
                            priority_labels=tracker.PRIORITY_LABELS,
                            timeline_fields=tracker.TIMELINE_FIELDS,
                            expand=request.args.get("open") == "1")
+
+
+@app.route("/applications/new", methods=["GET", "POST"])
+def new_application():
+    """Add a job to the application list by hand.
+
+    GET shows a form with all fields. POST validates that the fields shown in
+    the PDF summary (title, company, location, url) are filled, then saves the
+    job. An optional past "applied" date records a historical application; when
+    omitted the job starts in the "to apply" group.
+    """
+    if request.method == "POST":
+        fields = {key: request.form.get(key, "").strip()
+                  for key in ("title", "company", "location", "url")}
+        published = request.form.get("published", "").strip()
+        applied = request.form.get("applied", "").strip()
+        raw = request.form.get("priority", "")
+        priority = int(raw) if raw.isdigit() and int(raw) in tracker.PRIORITIES \
+            else None
+        if all(fields.values()):
+            record = {"id": uuid.uuid4().hex, "published": published, **fields}
+            tracker.add_application("manual", record, priority, applied)
+            return redirect(url_for("applications"))
+        return render_template(
+            "add_application.html", form=request.form,
+            error="Title, company, location and URL are required.",
+            priorities=tracker.PRIORITIES,
+            priority_labels=tracker.PRIORITY_LABELS)
+    return render_template("add_application.html", form={}, error=None,
+                           priorities=tracker.PRIORITIES,
+                           priority_labels=tracker.PRIORITY_LABELS)
 
 
 @app.route("/applications/<int:index>/status", methods=["POST"])

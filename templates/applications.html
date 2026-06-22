@@ -4,13 +4,15 @@
 
 {% block content %}
     <h1>My applications</h1>
-    {% if empty %}
-    <h2>No saved applications yet.</h2>
-    {% else %}
     <div class="toolbar">
+        <a href="{{ url_for('new_application') }}" class="button">Add manually</a>
+        {% if not empty %}
         <a href="{{ url_for('applications_pdf') }}" class="button"
            target="_blank">Generate PDF</a>
+        {% endif %}
     </div>
+    {% if empty %}
+    <h2>No saved applications yet.</h2>
     {% endif %}
     {% for heading, group in groups %}
     {% if group %}
