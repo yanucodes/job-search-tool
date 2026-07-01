@@ -49,9 +49,9 @@ TABLE_HEADER = r"""\documentclass{article}
 \begin{document}
 \section*{Bewerbungsübersicht}
 Stand: %s
-\begin{longtable}{|p{0.55\textwidth}|p{0.33\textwidth}|}
+\begin{longtable}{|c|p{0.55\textwidth}|p{0.33\textwidth}|}
 \hline
-\textbf{Stellenangebot} & \textbf{Bewerbungsverlauf} \\
+\textbf{Nr.} & \textbf{Stellenangebot} & \textbf{Bewerbungsverlauf} \\
 \hline
 \endhead
 """
@@ -199,8 +199,8 @@ def write_latex_table(applications):
     rows = []
     applied = sorted((a for a in applications if a.get("applied")),
                      key=lambda a: a["applied"])
-    for application in applied:
-        rows.append(f"{latex_job_cell(application)} & "
+    for number, application in enumerate(applied, start=1):
+        rows.append(f"{number} & {latex_job_cell(application)} & "
                     f"{latex_timeline_cell(application)} \\\\\n\\hline\n")
     header = TABLE_HEADER % format_date(datetime.date.today().isoformat())
     with open(output_path(APPLICATIONS_TABLE), "w", encoding="utf-8") as f:
