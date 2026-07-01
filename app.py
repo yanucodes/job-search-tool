@@ -106,7 +106,7 @@ def applications():
                      key=lambda e: e[1].get("applied", ""))
     groups = [
         ("To apply", to_apply),
-        ("Applied", applied),
+        ("Applied ({})".format(len(applied)), applied),
     ]
     return render_template("applications.html", groups=groups,
                            empty=not applications,
