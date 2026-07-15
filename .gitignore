@@ -215,3 +215,5 @@ temp/
 # LaTeX build artifacts
 *.aux
 *.out
+
+.flaskenv
