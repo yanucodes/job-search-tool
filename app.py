@@ -92,9 +92,10 @@ def index():
 def applications():
     """Show the jobs the user plans to apply for, grouped by progress.
 
-    The page has one section for jobs still to apply for and one for jobs
-    the application process has started on. Each application is paired
-    with its index in the saved list, which the status form posts back.
+    The page has one section for jobs still to apply for, one for jobs the
+    application process is running on, and one for jobs that were turned
+    down. Each application is paired with its index in the saved list,
+    which the status form posts back.
     """
     applications = tracker.load_applications()
     for application in applications:
@@ -102,11 +103,15 @@ def applications():
     entries = list(enumerate(applications))
     to_apply = sorted((e for e in entries if e[1]["status"] == "to apply"),
                       key=lambda e: e[1].get("priority", 99))
-    applied = sorted((e for e in entries if e[1]["status"] != "to apply"),
+    applied = sorted((e for e in entries
+                      if e[1]["status"] not in ("to apply", "rejected")),
                      key=lambda e: e[1].get("applied", ""))
+    rejected = sorted((e for e in entries if e[1]["status"] == "rejected"),
+                      key=lambda e: e[1].get("decided", ""))
     groups = [
         ("To apply", to_apply),
         ("Applied ({})".format(len(applied)), applied),
+        ("Rejected ({})".format(len(rejected)), rejected),
     ]
     return render_template("applications.html", groups=groups,
                            empty=not applications,
