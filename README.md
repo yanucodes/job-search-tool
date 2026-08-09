@@ -45,15 +45,16 @@ and output files.
   dropdown next to *Add to my list*; leaving it on *no priority* saves the
   job without one.
 - **My applications** (`/applications`) — lists the saved jobs with their
-  status and priority, grouped into jobs still to apply for and jobs
-  already applied to. Each entry shows its status and priority at a glance.
-  Click an entry to see its details and change the status
-  (`to apply`, `applied`, `invited`, `interview`, `offer`, `rejected`);
-  the date of each status change is recorded automatically, building a
-  timeline of the application process. You can also set or clear the
-  priority here. Jobs still to apply for are ordered by priority (highest
-  first, unprioritised last); jobs already applied to are ordered by the
-  date you applied (oldest first).
+  status and priority, grouped into jobs still to apply for, jobs already
+  applied to and jobs that were turned down; the *Applied* and *Rejected*
+  headings also show how many jobs they hold. Each entry shows its status
+  and priority at a glance. Click an entry to see its details and change
+  the status (`to apply`, `applied`, `invited`, `interview`, `offer`,
+  `rejected`); the date of each status change is recorded automatically,
+  building a timeline of the application process. You can also set or clear
+  the priority here. Jobs still to apply for are ordered by priority
+  (highest first, unprioritised last); jobs already applied to by the date
+  you applied (oldest first), turned-down jobs by the date of the decision.
 - **Generate PDF** (`/applications/pdf`) — compiles a PDF summary of the
   jobs you applied for and how each application went, using `pdflatex`
   (must be installed).
