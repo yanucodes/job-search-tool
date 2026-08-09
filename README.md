@@ -33,7 +33,9 @@ From the main menu you can:
 python app.py
 ```
 
-Then open <http://127.0.0.1:5000>. Search configurations are managed with
+Then open <http://127.0.0.1:5000>. Starting the app with `flask run`
+instead reads a local `.flaskenv` file, so a line like `FLASK_RUN_PORT=5002`
+there serves the app on that port. Search configurations are managed with
 the command-line interface; the web interface uses the same saved searches
 and output files.
 
