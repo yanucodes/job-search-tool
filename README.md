@@ -55,6 +55,12 @@ and output files.
   the priority here. Jobs still to apply for are ordered by priority
   (highest first, unprioritised last); jobs already applied to by the date
   you applied (oldest first), turned-down jobs by the date of the decision.
+- **Add manually** (`/applications/new`) — adds a job to the application
+  list by hand, for postings the review page never showed you. Title,
+  company, location and URL are required, as they make up the PDF summary;
+  the publication date, a priority and the date you applied are optional.
+  Filling in the applied date records a past application, so the job starts
+  in the *Applied* group instead of *To apply*.
 - **Generate PDF** (`/applications/pdf`) — compiles a PDF summary of the
   jobs you applied for and how each application went, using `pdflatex`
   (must be installed).
