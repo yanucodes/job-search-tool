@@ -186,7 +186,7 @@ def latex_timeline_cell(application):
     return " \\newline ".join(lines)
 
 
-def write_latex_table(applications):
+def write_latex_table(applications, start="", end=""):
     """Write the applied-for jobs as a LaTeX table to the output directory.
 
     Only jobs the user has applied to are included. Each row shows the job
@@ -195,9 +195,16 @@ def write_latex_table(applications):
 
     Args:
         applications: List of application dictionaries.
+        start: Optional ISO date (YYYY-MM-DD). When given, jobs applied to
+            before it are left out; when empty, there is no lower bound.
+        end: Optional ISO date (YYYY-MM-DD). When given, jobs applied to
+            after it are left out; when empty, there is no upper bound. Both
+            bounds are inclusive.
     """
     rows = []
-    applied = sorted((a for a in applications if a.get("applied")),
+    applied = sorted((a for a in applications if a.get("applied")
+                      and (not start or a["applied"] >= start)
+                      and (not end or a["applied"] <= end)),
                      key=lambda a: a["applied"])
     for number, application in enumerate(applied, start=1):
         rows.append(f"{number} & {latex_job_cell(application)} & "
