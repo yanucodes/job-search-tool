@@ -65,7 +65,11 @@ and output files.
   in the *Applied* group instead of *To apply*.
 - **Generate PDF** (`/applications/pdf`) — compiles a PDF summary of the
   jobs you applied for and how each application went, using `pdflatex`
-  (must be installed).
+  (must be installed). Rows are numbered and ordered by the date you
+  applied. The two date fields next to the button limit the summary to a
+  period: with a start date only jobs applied for on or after it are
+  included, with an end date only those applied for on or before it. Both
+  are optional — leaving them empty summarizes every job you applied for.
 
 ## Output directory
 
