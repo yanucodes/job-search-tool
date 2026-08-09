@@ -201,8 +201,15 @@ def delete_application(index):
 
 @app.route("/applications/pdf")
 def applications_pdf():
-    """Generate a PDF summary of the application list and return it."""
-    tracker.write_latex_table(tracker.load_applications())
+    """Generate a PDF summary of the application list and return it.
+
+    The optional "start" and "end" query arguments hold ISO dates limiting
+    the summary to the jobs applied to within that range. Each bound is
+    inclusive; a bound that is left empty is not applied.
+    """
+    start = request.args.get("start", "").strip()
+    end = request.args.get("end", "").strip()
+    tracker.write_latex_table(tracker.load_applications(), start, end)
     output_dir = search.get_output_dir()
     result = subprocess.run(
         ["pdflatex", "-interaction=nonstopmode", tracker.APPLICATIONS_TABLE],
