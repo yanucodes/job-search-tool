@@ -84,8 +84,12 @@ All results live in the configured output directory:
   (`1` high, `2` moderate, `3` low); the key is absent when no priority is
   set.
 - `applications.tex` — a LaTeX table summarizing the jobs you applied for
-  and the outcomes, regenerated on every change. Compile it with
-  `pdflatex applications.tex` for a PDF overview.
+  and the outcomes. It is rewritten whenever the application list changes,
+  and again whenever *Generate PDF* runs — then holding only the jobs of
+  the chosen date range. Compile it with `pdflatex applications.tex` for a
+  PDF overview.
+- `applications.pdf` — the compiled overview, next to the `.aux`, `.log`
+  and `.out` files `pdflatex` leaves behind.
 
 ## Adding another job board
 
