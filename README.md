@@ -71,6 +71,18 @@ and output files.
   included, with an end date only those applied for on or before it. Both
   are optional — leaving them empty summarizes every job you applied for.
 
+## Demo
+
+```sh
+python demo/run_demo.py
+```
+
+Runs the web interface on <http://127.0.0.1:5055> against obviously fake
+postings served by `jobboards/mock.py`, with its own configuration and
+results directory under `demo/`. It never touches your real configuration,
+your saved results or any job board API, which makes it safe for
+screenshots. Start it from the `job-search-tool` directory.
+
 ## Output directory
 
 All results live in the configured output directory:
@@ -108,7 +120,9 @@ Create a module in `jobboards/` that provides four functions:
   shown to the user.
 
 Then register the module in `SERVICES` in `search.py`. See
-`jobboards/arbeitsagentur.py` for a reference implementation.
+`jobboards/arbeitsagentur.py` for a reference implementation, or
+`jobboards/mock.py` for a minimal one that reads its postings from a local
+JSON file.
 
 ## Development and AI usage
 
