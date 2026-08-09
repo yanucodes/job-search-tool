@@ -129,3 +129,7 @@ JSON file.
 I designed and wrote the initial structure of this project myself, and
 later extended it with the help of AI tools. Every line of code is
 reviewed, understood and maintained by me.
+
+## License
+
+BSD 3-Clause — see [LICENSE](LICENSE).
