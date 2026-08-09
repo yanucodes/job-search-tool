@@ -7,8 +7,14 @@
     <div class="toolbar">
         <a href="{{ url_for('new_application') }}" class="button">Add manually</a>
         {% if not empty %}
-        <a href="{{ url_for('applications_pdf') }}" class="button"
-           target="_blank">Generate PDF</a>
+        <form method="GET" action="{{ url_for('applications_pdf') }}"
+              target="_blank">
+            <label for="pdf-start">Applied from: </label>
+            <input type="date" id="pdf-start" name="start">
+            <label for="pdf-end">to: </label>
+            <input type="date" id="pdf-end" name="end">
+            <input type="submit" value="Generate PDF">
+        </form>
         {% endif %}
     </div>
     {% if empty %}
