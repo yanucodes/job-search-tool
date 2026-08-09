@@ -52,7 +52,9 @@ and output files.
   the status (`to apply`, `applied`, `invited`, `interview`, `offer`,
   `rejected`); the date of each status change is recorded automatically,
   building a timeline of the application process. You can also set or clear
-  the priority here. Jobs still to apply for are ordered by priority
+  the priority here, or remove the entry from the list with *Delete*; a
+  removed job stays in the seen list, so later searches will not offer it
+  again. Jobs still to apply for are ordered by priority
   (highest first, unprioritised last); jobs already applied to by the date
   you applied (oldest first), turned-down jobs by the date of the decision.
 - **Add manually** (`/applications/new`) — adds a job to the application
