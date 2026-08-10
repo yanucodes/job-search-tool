@@ -176,6 +176,15 @@ form.stacked .field .hint {
     color: #2f4a3e;
 }
 
+.kind {
+    display: inline-block;
+    background-color: #e6ecf3;
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 0.85em;
+    color: #3b4a7a;
+}
+
 .priority {
     display: inline-block;
     background-color: #f3e6e6;

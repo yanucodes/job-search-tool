@@ -28,6 +28,9 @@
         <details {% if expand %}open{% endif %}>
             <summary>
                 <span class="status">{{ application.status }}</span>
+                {% if application.kind != default_kind %}
+                <span class="kind">{{ application.label }}</span>
+                {% endif %}
                 {% if application.priority %}
                 <span class="priority">{{ priority_labels[application.priority] }} priority</span>
                 {% else %}
@@ -38,6 +41,9 @@
             </summary>
             <p>{{ application.location }} · published
                {{ application.published }} on {{ application.service }}</p>
+            {% if application.contact %}
+            <p>Contact: {{ application.contact }}</p>
+            {% endif %}
             <p><a href="{{ application.url }}" target="_blank">open posting</a></p>
             <ul class="timeline">
                 {% for field in timeline_fields %}

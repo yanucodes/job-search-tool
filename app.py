@@ -7,6 +7,7 @@ import uuid
 from flask import Flask, redirect, render_template, request, send_file, \
     url_for
 
+import entries
 import search
 import tracker
 
@@ -45,8 +46,8 @@ def review():
     description = search.SERVICES[service].description(record)
     return render_template("review.html", service=service, job=record,
                            description=description, total=len(jobs),
-                           priorities=tracker.PRIORITIES,
-                           priority_labels=tracker.PRIORITY_LABELS)
+                           priorities=entries.PRIORITIES,
+                           priority_labels=entries.PRIORITY_LABELS)
 
 
 @app.route("/review/search", methods=["POST"])
@@ -70,7 +71,7 @@ def resolve_job(action):
     service = request.form["service"]
     job_id = request.form["job_id"]
     raw = request.form.get("priority", "")
-    priority = int(raw) if raw.isdigit() and int(raw) in tracker.PRIORITIES \
+    priority = int(raw) if raw.isdigit() and int(raw) in entries.PRIORITIES \
         else None
     for entry in get_pending_jobs():
         if entry[0] == service and entry[1]["id"] == job_id:
@@ -98,16 +99,14 @@ def applications():
     which the status form posts back.
     """
     applications = tracker.load_applications()
-    for application in applications:
-        application["status"] = tracker.get_status(application)
-    entries = list(enumerate(applications))
-    to_apply = sorted((e for e in entries if e[1]["status"] == "to apply"),
-                      key=lambda e: e[1].get("priority", 99))
-    applied = sorted((e for e in entries
-                      if e[1]["status"] not in ("to apply", "rejected")),
-                     key=lambda e: e[1].get("applied", ""))
-    rejected = sorted((e for e in entries if e[1]["status"] == "rejected"),
-                      key=lambda e: e[1].get("decided", ""))
+    numbered = list(enumerate(applications))
+    to_apply = sorted((e for e in numbered if e[1].status == "to apply"),
+                      key=lambda e: e[1].priority or 99)
+    applied = sorted((e for e in numbered
+                      if e[1].status not in ("to apply", "rejected")),
+                     key=lambda e: e[1].applied)
+    rejected = sorted((e for e in numbered if e[1].status == "rejected"),
+                      key=lambda e: e[1].decided)
     groups = [
         ("To apply", to_apply),
         ("Applied ({})".format(len(applied)), applied),
@@ -115,10 +114,11 @@ def applications():
     ]
     return render_template("applications.html", groups=groups,
                            empty=not applications,
-                           statuses=tracker.STATUSES,
-                           priorities=tracker.PRIORITIES,
-                           priority_labels=tracker.PRIORITY_LABELS,
-                           timeline_fields=tracker.TIMELINE_FIELDS,
+                           statuses=entries.STATUSES,
+                           priorities=entries.PRIORITIES,
+                           priority_labels=entries.PRIORITY_LABELS,
+                           timeline_fields=entries.TIMELINE_FIELDS,
+                           default_kind=entries.Entry.kind,
                            expand=request.args.get("open") == "1")
 
 
@@ -128,29 +128,35 @@ def new_application():
 
     GET shows a form with all fields. POST validates that the fields shown in
     the PDF summary (title, company, location, url) are filled, then saves the
-    job. An optional past "applied" date records a historical application; when
-    omitted the job starts in the "to apply" group.
+    entry. An optional past "applied" date records an effort already made;
+    when omitted the entry starts in the "to apply" group. The kind decides
+    which Eigenbemühung it is and how it is worded in the PDF summary.
     """
     if request.method == "POST":
         fields = {key: request.form.get(key, "").strip()
                   for key in ("title", "company", "location", "url")}
         published = request.form.get("published", "").strip()
         applied = request.form.get("applied", "").strip()
+        contact = request.form.get("contact", "").strip()
+        kind = request.form.get("kind", "")
+        kind = kind if kind in entries.REGISTRY else entries.Entry.kind
         raw = request.form.get("priority", "")
-        priority = int(raw) if raw.isdigit() and int(raw) in tracker.PRIORITIES \
+        priority = int(raw) if raw.isdigit() and int(raw) in entries.PRIORITIES \
             else None
         if all(fields.values()):
             record = {"id": uuid.uuid4().hex, "published": published, **fields}
-            tracker.add_application("manual", record, priority, applied)
+            tracker.add_application("manual", record, priority, applied, kind,
+                                    contact)
             return redirect(url_for("applications"))
         return render_template(
             "add_application.html", form=request.form,
             error="Title, company, location and URL are required.",
-            priorities=tracker.PRIORITIES,
-            priority_labels=tracker.PRIORITY_LABELS)
+            priorities=entries.PRIORITIES,
+            priority_labels=entries.PRIORITY_LABELS, kinds=entries.KINDS)
     return render_template("add_application.html", form={}, error=None,
-                           priorities=tracker.PRIORITIES,
-                           priority_labels=tracker.PRIORITY_LABELS)
+                           priorities=entries.PRIORITIES,
+                           priority_labels=entries.PRIORITY_LABELS,
+                           kinds=entries.KINDS)
 
 
 @app.route("/applications/<int:index>/status", methods=["POST"])
@@ -164,7 +170,7 @@ def update_status(index):
     """
     status = request.form["status"]
     if (0 <= index < len(tracker.load_applications())
-            and status in tracker.STATUSES):
+            and status in entries.STATUSES):
         tracker.update_status(index, status)
     return redirect(url_for("applications"))
 
@@ -177,7 +183,7 @@ def update_priority(index):
         index: Index of the application in the saved list.
     """
     raw = request.form.get("priority", "")
-    priority = int(raw) if raw.isdigit() and int(raw) in tracker.PRIORITIES \
+    priority = int(raw) if raw.isdigit() and int(raw) in entries.PRIORITIES \
         else None
     if 0 <= index < len(tracker.load_applications()):
         tracker.update_priority(index, priority)

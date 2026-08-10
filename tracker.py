@@ -1,42 +1,21 @@
-"""Track seen jobs and the list of jobs the user plans to apply for.
+"""Track seen jobs and the entries of the application list.
 
-All files live in the output directory configured in search.py.
+The entries themselves -- job applications and the other Eigenbemühungen --
+live in entries.py; this module only stores them and lays them out as a
+LaTeX summary. All files live in the output directory configured in search.py.
 """
 
 import datetime
 import json
 import os
 
+import entries
 import search
 
 SEEN_FILE = "seen.json"
 APPLICATIONS_FILE = "applications.json"
 APPLICATIONS_TABLE = "applications.tex"
-TIMELINE_FIELDS = ["applied", "invited", "interview", "decided"]
-DECISIONS = ["offer", "rejected"]
-STATUSES = ["to apply", "applied", "invited", "interview"] + DECISIONS
-PRIORITIES = [1, 2, 3]
-PRIORITY_LABELS = {1: "high", 2: "moderate", 3: "low"}
-LATEX_SPECIAL_CHARS = {
-    "\\": r"\textbackslash{}",
-    "&": r"\&",
-    "%": r"\%",
-    "$": r"\$",
-    "#": r"\#",
-    "_": r"\_",
-    "{": r"\{",
-    "}": r"\}",
-    "~": r"\textasciitilde{}",
-    "^": r"\textasciicircum{}",
-}
-TIMELINE_LABELS = {
-    "applied": "Beworben",
-    "invited": "Einladung erhalten",
-    "interview": "Vorstellungsgespräch",
-    "decided": "Entscheidung",
-}
-DECISION_LABELS = {"offer": "Zusage", "rejected": "Absage"}
-TABLE_HEADER = r"""\documentclass{article}
+DOC_HEADER = r"""\documentclass{article}
 \usepackage[T1]{fontenc}
 \usepackage[margin=2cm]{geometry}
 \usepackage{longtable}
@@ -47,17 +26,18 @@ TABLE_HEADER = r"""\documentclass{article}
 \renewcommand{\arraystretch}{1.5}
 \setlength{\tabcolsep}{10pt}
 \begin{document}
-\section*{Bewerbungsübersicht}
+\section*{Übersicht der Eigenbemühungen}
 Stand: %s
+"""
+SECTION_HEADER = r"""\subsection*{%s}
 \begin{longtable}{|c|p{0.55\textwidth}|p{0.33\textwidth}|}
 \hline
-\textbf{Nr.} & \textbf{Stellenangebot} & \textbf{Bewerbungsverlauf} \\
+\textbf{Nr.} & \textbf{%s} & \textbf{%s} \\
 \hline
 \endhead
 """
-TABLE_FOOTER = r"""\end{longtable}
-\end{document}
-"""
+SECTION_FOOTER = "\\end{longtable}\n"
+DOC_FOOTER = "\\end{document}\n"
 
 
 def output_path(filename):
@@ -103,221 +83,131 @@ def mark_seen(service, job_id):
 
 
 def load_applications():
-    """Load the list of jobs the user plans to apply for.
+    """Load the entries of the application list.
 
     Returns:
-        List of application dictionaries. Empty if nothing was saved yet.
+        List of Entry objects. Empty if nothing was saved yet.
     """
     path = output_path(APPLICATIONS_FILE)
     if not os.path.exists(path):
         return []
     with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
+        return [entries.from_dict(data) for data in json.load(f)]
 
 
 def save_applications(applications):
     """Write the application list and its LaTeX table to the output directory.
 
     Args:
-        applications: List of application dictionaries to persist.
+        applications: List of Entry objects to persist.
     """
     with open(output_path(APPLICATIONS_FILE), "w", encoding="utf-8") as f:
-        json.dump(applications, f, indent=2, ensure_ascii=False)
+        json.dump([entry.to_dict() for entry in applications], f, indent=2,
+                  ensure_ascii=False)
     write_latex_table(applications)
 
 
-def escape_latex(text):
-    """Escape characters that have a special meaning in LaTeX.
-
-    Args:
-        text: Plain text to escape.
-
-    Returns:
-        Text safe to place in a LaTeX document.
-    """
-    return "".join(LATEX_SPECIAL_CHARS.get(char, char) for char in text)
-
-
-def format_date(date):
-    """Format an ISO date for the LaTeX table.
-
-    Args:
-        date: Date as an ISO string (YYYY-MM-DD).
-
-    Returns:
-        The date as DD.MM.YYYY.
-    """
-    return datetime.date.fromisoformat(date).strftime("%d.%m.%Y")
-
-
-def latex_job_cell(application):
-    """Build the table cell describing the job of an application.
-
-    Args:
-        application: Application dictionary.
-
-    Returns:
-        LaTeX for the cell: title, company, place and link to the posting.
-    """
-    return " \\newline ".join([
-        f"\\textbf{{{escape_latex(application['title'])}}}",
-        escape_latex(f"{application['company']}, {application['location']}"),
-        f"\\url{{{application['url']}}}",
-    ])
-
-
-def latex_timeline_cell(application):
-    """Build the table cell with the timeline of an application.
-
-    Args:
-        application: Application dictionary.
-
-    Returns:
-        LaTeX for the cell: one line per recorded timeline date.
-    """
-    lines = []
-    for field in TIMELINE_FIELDS:
-        if not application.get(field):
-            continue
-        label = TIMELINE_LABELS[field]
-        if field == "decided" and application.get("decision"):
-            label = DECISION_LABELS[application["decision"]]
-        lines.append(f"{label}: {format_date(application[field])}")
-    return " \\newline ".join(lines)
-
-
 def write_latex_table(applications, start="", end=""):
-    """Write the applied-for jobs as a LaTeX table to the output directory.
+    """Write the entries acted on as a LaTeX summary to the output directory.
 
-    Only jobs the user has applied to are included. Each row shows the job
-    (title, company, place and link to the posting) next to the timeline
-    of the application process.
+    Only entries with a first action recorded are included. Each kind of
+    Eigenbemühung gets its own section, numbered from one, so that the
+    applications stay countable next to the other efforts. Within a section,
+    each row shows what the entry was about next to its timeline.
 
     Args:
-        applications: List of application dictionaries.
-        start: Optional ISO date (YYYY-MM-DD). When given, jobs applied to
+        applications: List of Entry objects.
+        start: Optional ISO date (YYYY-MM-DD). When given, entries acted on
             before it are left out; when empty, there is no lower bound.
-        end: Optional ISO date (YYYY-MM-DD). When given, jobs applied to
+        end: Optional ISO date (YYYY-MM-DD). When given, entries acted on
             after it are left out; when empty, there is no upper bound. Both
             bounds are inclusive.
     """
-    rows = []
-    applied = sorted((a for a in applications if a.get("applied")
-                      and (not start or a["applied"] >= start)
-                      and (not end or a["applied"] <= end)),
-                     key=lambda a: a["applied"])
-    for number, application in enumerate(applied, start=1):
-        rows.append(f"{number} & {latex_job_cell(application)} & "
-                    f"{latex_timeline_cell(application)} \\\\\n\\hline\n")
-    header = TABLE_HEADER % format_date(datetime.date.today().isoformat())
+    acted_on = sorted((a for a in applications if a.applied
+                       and (not start or a.applied >= start)
+                       and (not end or a.applied <= end)),
+                      key=lambda a: a.applied)
+    sections = []
+    for entry_class in entries.KINDS:
+        of_kind = [a for a in acted_on if a.kind == entry_class.kind]
+        if not of_kind:
+            continue
+        header = SECTION_HEADER % (entry_class.section, *entry_class.columns)
+        rows = [entry.latex_row(number)
+                for number, entry in enumerate(of_kind, start=1)]
+        sections.append(header + "".join(rows) + SECTION_FOOTER)
+    document = (DOC_HEADER % entries.format_date(
+        datetime.date.today().isoformat()) + "".join(sections) + DOC_FOOTER)
     with open(output_path(APPLICATIONS_TABLE), "w", encoding="utf-8") as f:
-        f.write(header + "".join(rows) + TABLE_FOOTER)
+        f.write(document)
 
 
-def add_application(service, record, priority=None, applied=""):
-    """Add a job to the application list with an empty timeline.
+def add_application(service, record, priority=None, applied="", kind="job",
+                    contact=""):
+    """Add an entry to the application list with an empty timeline.
 
     Args:
-        service: Name of the job board the job came from.
+        service: Name of the job board the job came from, or "manual".
         record: Normalized job record as returned by the board's normalize().
-        priority: Optional priority level (one of PRIORITIES). When given, it
-            is stored under "priority"; when omitted the key is left out, which
-            marks the job as having no chosen priority.
-        applied: Optional ISO date (YYYY-MM-DD) the user applied on. When given
-            it is stored in the "applied" timeline field, which marks the job
-            as already applied to; when omitted the timeline starts empty.
+        priority: Optional priority level (one of entries.PRIORITIES). When
+            given, it is stored on the entry; when omitted the entry has no
+            chosen priority.
+        applied: Optional ISO date (YYYY-MM-DD) of the first action. When
+            given it marks the entry as already acted on; when omitted the
+            timeline starts empty.
+        kind: Which kind of Eigenbemühung this is, a key of entries.REGISTRY.
+            Defaults to a plain job application.
+        contact: Optional contact person, e.g. of a recruiter.
     """
     applications = load_applications()
-    application = {
-        "service": service,
-        "saved": datetime.date.today().isoformat(),
-        **{field: "" for field in TIMELINE_FIELDS},
-        "decision": "",
-        **record,
-    }
-    if applied:
-        application["applied"] = applied
-    if priority in PRIORITIES:
-        application["priority"] = priority
-    applications.append(application)
+    entry_class = entries.REGISTRY.get(kind, entries.Entry)
+    known = {key: value for key, value in record.items()
+             if key in entries.RECORD_FIELDS}
+    extra = {key: value for key, value in record.items()
+             if key not in entries.RECORD_FIELDS}
+    applications.append(entry_class(
+        service=service, applied=applied, contact=contact,
+        priority=priority if priority in entries.PRIORITIES else None,
+        extra=extra, **known))
     save_applications(applications)
 
 
-def get_status(application):
-    """Derive the displayed status of an application from its timeline.
-
-    The status is the latest timeline event: the decision if one was made,
-    otherwise "interview", "invited", "applied" or "to apply".
-
-    Args:
-        application: Application dictionary.
-
-    Returns:
-        Status as a string.
-    """
-    if application.get("decision"):
-        return application["decision"]
-    if application.get("interview"):
-        return "interview"
-    if application.get("invited"):
-        return "invited"
-    if application.get("applied"):
-        return "applied"
-    return "to apply"
-
-
 def update_status(index, status):
-    """Set the status of a saved job by updating its timeline.
-
-    The timeline date of the new status is set to today, later dates and
-    the decision are cleared, and earlier dates are kept. The status
-    "to apply" clears the whole timeline.
+    """Set the status of a saved entry by updating its timeline.
 
     Args:
-        index: Index of the application in the saved list.
-        status: New status, one of STATUSES.
+        index: Index of the entry in the saved list.
+        status: New status, one of entries.STATUSES.
     """
     applications = load_applications()
-    application = applications[index]
-    field = "decided" if status in DECISIONS else status
-    position = TIMELINE_FIELDS.index(field) if field in TIMELINE_FIELDS else -1
-    if position >= 0:
-        application[field] = datetime.date.today().isoformat()
-    for later_field in TIMELINE_FIELDS[position + 1:]:
-        application[later_field] = ""
-    application["decision"] = status if status in DECISIONS else ""
+    applications[index].set_status(status)
     save_applications(applications)
 
 
 def delete_application(index):
-    """Remove a saved job from the application list.
+    """Remove a saved entry from the application list.
 
     The job is kept in the seen list (re-asserted here in case the entry
     predates seen tracking or the seen file was cleared), so it will not
     reappear in future searches.
 
     Args:
-        index: Index of the application in the saved list.
+        index: Index of the entry in the saved list.
     """
     applications = load_applications()
-    application = applications[index]
-    mark_seen(application["service"], application["id"])
+    entry = applications[index]
+    mark_seen(entry.service, entry.id)
     applications.pop(index)
     save_applications(applications)
 
 
 def update_priority(index, priority):
-    """Set or clear the priority of a saved job.
+    """Set or clear the priority of a saved entry.
 
     Args:
-        index: Index of the application in the saved list.
-        priority: New priority (one of PRIORITIES), or None to clear it. When
-            cleared, the "priority" key is removed so the job has no priority.
+        index: Index of the entry in the saved list.
+        priority: New priority (one of entries.PRIORITIES), or None to clear.
     """
     applications = load_applications()
-    application = applications[index]
-    if priority in PRIORITIES:
-        application["priority"] = priority
-    else:
-        application.pop("priority", None)
+    applications[index].set_priority(priority)
     save_applications(applications)

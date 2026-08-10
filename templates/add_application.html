@@ -10,6 +10,18 @@
         {% endif %}
         <form method="POST" action="{{ url_for('new_application') }}"
               class="stacked">
+            <label class="field">Kind
+                <select name="kind">
+                    {% for kind in kinds %}
+                    <option value="{{ kind.kind }}"
+                            {% if form.kind == kind.kind %}selected{% endif %}>
+                        {{ kind.label }}</option>
+                    {% endfor %}
+                </select>
+                <span class="hint">for anything but an application, Title is
+                    what the effort was and Company the agency or organiser
+                </span>
+            </label>
             <label class="field">Title
                 <input type="text" name="title"
                        value="{{ form.title }}" required>
@@ -17,6 +29,12 @@
             <label class="field">Company
                 <input type="text" name="company"
                        value="{{ form.company }}" required>
+            </label>
+            <label class="field">Contact person
+                <input type="text" name="contact"
+                       value="{{ form.contact }}">
+                <span class="hint">optional, e.g. the recruiter you spoke to
+                </span>
             </label>
             <label class="field">Location
                 <input type="text" name="location"

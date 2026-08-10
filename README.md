@@ -59,19 +59,42 @@ and output files.
   again. Jobs still to apply for are ordered by priority
   (highest first, unprioritised last); jobs already applied to by the date
   you applied (oldest first), turned-down jobs by the date of the decision.
-- **Add manually** (`/applications/new`) — adds a job to the application
-  list by hand, for postings the review page never showed you. Title,
-  company, location and URL are required, as they make up the PDF summary;
-  the publication date, a priority and the date you applied are optional.
+- **Add manually** (`/applications/new`) — adds an entry to the list by hand,
+  for postings the review page never showed you. Title, company, location
+  and URL are required, as they make up the PDF summary; the publication
+  date, a priority, a contact person and the date you applied are optional.
   Filling in the applied date records a past application, so the job starts
-  in the *Applied* group instead of *To apply*.
+  in the *Applied* group instead of *To apply*. The *Kind* dropdown chooses
+  what sort of effort the entry records (see below); for anything but a job
+  application, Title is what the effort was and Company the agency or
+  organiser.
 - **Generate PDF** (`/applications/pdf`) — compiles a PDF summary of the
-  jobs you applied for and how each application went, using `pdflatex`
-  (must be installed). Rows are numbered and ordered by the date you
-  applied. The two date fields next to the button limit the summary to a
-  period: with a start date only jobs applied for on or after it are
-  included, with an end date only those applied for on or before it. Both
-  are optional — leaving them empty summarizes every job you applied for.
+  entries you acted on and how each went, using `pdflatex` (must be
+  installed). Each kind of entry gets its own section, numbered from one
+  and ordered by date, so applications stay countable next to the other
+  efforts. The two date fields next to the button limit the summary to a
+  period: with a start date only entries acted on on or after it are
+  included, with an end date only those on or before it. Both are optional
+  — leaving them empty summarizes everything you acted on.
+
+## Kinds of entry
+
+Not every documented job-search effort is an application to a posting.
+Contacting a private recruiter or visiting a job fair counts too, and has to
+be reported with its own wording rather than as "Beworben". Each kind is a
+class in `entries.py` carrying the German labels it prints with:
+
+| Kind | Class | PDF section |
+|---|---|---|
+| Bewerbung | `Entry` | Bewerbungen |
+| Vermittlerkontakt | `RecruiterContact` | Vermittlerkontakte |
+| Jobmesse | `FairVisit` | Jobmessen |
+| Sonstige Eigenbemühung | `NetworkEffort` | Sonstige Eigenbemühungen |
+
+Every kind shares the same timeline — a first action, a follow-up, a
+conversation and an outcome — and only relabels it, so the status dropdown
+and the date tracking work the same everywhere. To add a kind, subclass
+`Entry`, override its class attributes and list it in `entries.KINDS`.
 
 ## Demo
 
@@ -91,15 +114,17 @@ All results live in the configured output directory:
 
 - `seen.json` — IDs of jobs you have already reviewed (for arbeitsagentur
   this is the posting's `refnr`).
-- `applications.json` — the jobs you plan to apply for, with saved date and
-  the timeline of the application process: the dates of applying, the
-  interview invitation, the interview and the final decision, and what the
-  decision was. A job with a chosen priority also has a `priority` key
-  (`1` high, `2` moderate, `3` low); the key is absent when no priority is
-  set.
-- `applications.tex` — a LaTeX table summarizing the jobs you applied for
-  and the outcomes. It is rewritten whenever the application list changes,
-  and again whenever *Generate PDF* runs — then holding only the jobs of
+- `applications.json` — the entries you saved, with saved date and the
+  timeline of the process: the dates of the first action, the invitation,
+  the conversation and the final decision, and what the decision was. The
+  `kind` key says which sort of effort the entry records. An entry with a
+  chosen priority also has a `priority` key (`1` high, `2` moderate, `3`
+  low), and one with a contact person a `contact` key; both are absent when
+  unset. Entries are loaded as the objects defined in `entries.py` and
+  written back with their `to_dict()`.
+- `applications.tex` — a LaTeX summary of the entries you acted on and their
+  outcomes, one section per kind. It is rewritten whenever the list changes,
+  and again whenever *Generate PDF* runs — then holding only the entries of
   the chosen date range. Compile it with `pdflatex applications.tex` for a
   PDF overview.
 - `applications.pdf` — the compiled overview, next to the `.aux`, `.log`

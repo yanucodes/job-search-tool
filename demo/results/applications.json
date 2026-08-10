@@ -1,5 +1,6 @@
 [
   {
+    "kind": "job",
     "service": "mock",
     "saved": "2026-06-12",
     "applied": "",
@@ -15,6 +16,7 @@
     "url": "https://example.com/demo/jobs/python-backend"
   },
   {
+    "kind": "job",
     "service": "mock",
     "saved": "2026-06-12",
     "applied": "",
@@ -30,6 +32,7 @@
     "url": "https://example.com/demo/jobs/ios-swiftui"
   },
   {
+    "kind": "job",
     "service": "mock",
     "saved": "2026-06-05",
     "applied": "2026-06-06",
@@ -45,6 +48,7 @@
     "url": "https://example.com/demo/jobs/medical-imaging"
   },
   {
+    "kind": "job",
     "service": "mock",
     "saved": "2026-05-28",
     "applied": "2026-05-29",
@@ -60,6 +64,7 @@
     "url": "https://example.com/demo/jobs/scientific-computing"
   },
   {
+    "kind": "job",
     "service": "mock",
     "saved": "2026-05-20",
     "applied": "2026-05-21",
