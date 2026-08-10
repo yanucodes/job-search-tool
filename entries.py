@@ -19,12 +19,12 @@ STATUSES = ["to apply", "applied", "invited", "interview"] + DECISIONS
 PRIORITIES = [1, 2, 3]
 PRIORITY_LABELS = {1: "high", 2: "moderate", 3: "low"}
 RECORD_FIELDS = ["id", "title", "company", "location", "published", "url"]
-KNOWN_FIELDS = ({"service", "saved", "contact", "decision", "priority"}
-                | set(TIMELINE_FIELDS) | set(RECORD_FIELDS))
+KNOWN_FIELDS = ({"service", "saved", "contact", "decision", "priority",
+                 "attended"} | set(TIMELINE_FIELDS) | set(RECORD_FIELDS))
 REQUIRED_FIELDS = ["title", "company", "location", "url"]
 FIELD_TYPES = {"title": "text", "company": "text", "location": "text",
                "url": "url", "contact": "text", "published": "date",
-               "saved": "date", "applied": "date"}
+               "saved": "date", "applied": "date", "attended": "checkbox"}
 LATEX_SPECIAL_CHARS = {
     "\\": r"\textbackslash{}",
     "&": r"\&",
@@ -83,6 +83,7 @@ class Entry:
         form_fields: Which fields the manual form offers, in order.
         field_labels: Label per form field, saying what to record in it.
         field_hints: Optional help text per form field.
+        statuses: Which statuses this kind can be in.
         status_labels: What a status is called for this kind, where the
             wording of a job application does not fit.
         section: Heading of the section this kind gets in the PDF summary.
@@ -102,6 +103,7 @@ class Entry:
                     "applied": "Applied"}
     field_hints = {"applied": "leave empty if not applied yet; may be a past"
                               " date"}
+    statuses = STATUSES
     status_labels = {}
     section = "Bewerbungen"
     columns = ("Stellenangebot", "Bewerbungsverlauf")
@@ -116,7 +118,7 @@ class Entry:
     def __init__(self, service, id="", title="", company="", location="",
                  published="", url="", saved="", contact="", applied="",
                  invited="", interview="", decided="", decision="",
-                 priority=None, extra=None):
+                 priority=None, attended=False, extra=None):
         """Create an entry.
 
         Args:
@@ -137,6 +139,8 @@ class Entry:
             decided: ISO date of the outcome.
             decision: What the outcome was, one of DECISIONS.
             priority: Optional priority level, one of PRIORITIES.
+            attended: Whether an event was actually attended. Only kinds
+                that stand for an event use it.
             extra: Optional dictionary of further keys to keep, for values a
                 job board records that this class does not know about.
         """
@@ -155,7 +159,20 @@ class Entry:
         self.decided = decided
         self.decision = decision
         self.priority = priority
+        self.attended = attended
         self.extra = extra or {}
+
+    @property
+    def reportable(self):
+        """Whether the entry belongs in the PDF summary.
+
+        An effort is only reported once it was actually made, which for a
+        plain entry means its first timeline date is filled in.
+
+        Returns:
+            True if the entry should appear in the summary.
+        """
+        return bool(self.applied)
 
     @property
     def status(self):
@@ -234,6 +251,8 @@ class Entry:
             data["contact"] = self.contact
         if self.priority in PRIORITIES:
             data["priority"] = self.priority
+        if self.attended:
+            data["attended"] = True
         data.update(self.extra)
         return data
 
@@ -327,35 +346,60 @@ class RecruiterContact(Entry):
 
 
 class FairVisit(Entry):
-    """Visit to a job fair or career event."""
+    """A job fair or career event, planned and then possibly attended.
+
+    A fair has a single date -- the day it takes place -- which is known
+    long before there is anything to report. Whether it was attended is
+    therefore tracked on its own, and only an attended fair is an
+    Eigenbemühung that belongs in the summary.
+    """
 
     kind = "fair"
     label = "Job fair"
     group = "Job fairs"
-    form_fields = ["title", "company", "location", "url", "saved", "contact",
-                   "applied"]
+    form_fields = ["title", "company", "location", "url", "applied",
+                   "contact", "attended"]
     field_labels = {"title": "Event", "company": "Organiser",
                     "location": "Venue", "url": "Event website",
-                    "saved": "Date added", "contact": "Who you spoke to",
-                    "applied": "Date visited"}
-    field_hints = {"title": "e.g. heise Jobs IT-Tag Stuttgart",
-                   "saved": "when you noted the fair down; defaults to today",
-                   "contact": "optional, the people or companies you talked"
-                              " to at the stands",
-                   "applied": "leave empty while you are only planning to go"
-                              " -- a fair enters the PDF summary once this is"
-                              " set"}
-    status_labels = {"to apply": "planned", "applied": "visited",
-                     "invited": "contacts made", "interview": "follow-up"}
+                    "applied": "Date of the fair",
+                    "contact": "Who you spoke to", "attended": "Attended"}
+    field_hints = {"title": "e.g. heise jobs IT-Tag Stuttgart",
+                   "contact": "the people or companies you talked to at the"
+                              " stands; fill in after the visit",
+                   "attended": "tick only once you have actually been there"
+                               " -- a fair enters the PDF summary at that"
+                               " point, not before"}
+    statuses = ["planned", "attended"]
     section = "Jobmessen"
     columns = ("Veranstaltung", "Verlauf")
     timeline_labels = {
-        "applied": "Besuch",
+        "applied": "Besucht am",
         "invited": "Kontakte geknüpft",
         "interview": "Folgegespräch",
         "decided": "Abschluss",
     }
     decision_labels = {"offer": "Zusage", "rejected": "Absage"}
+
+    @property
+    def status(self):
+        """Whether the fair is still ahead or was attended."""
+        return "attended" if self.attended else "planned"
+
+    @property
+    def reportable(self):
+        """Only a fair actually attended is reported, and only with a date."""
+        return bool(self.applied) and self.attended
+
+    def set_status(self, status):
+        """Record whether the fair was attended.
+
+        The date stays as it is: it is the day the fair takes place, which
+        does not change by going or not going.
+
+        Args:
+            status: One of the statuses of this kind.
+        """
+        self.attended = status == "attended"
 
 
 class NetworkEffort(Entry):

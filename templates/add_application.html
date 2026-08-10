@@ -26,9 +26,14 @@
             <input type="hidden" name="kind" value="{{ entry_class.kind }}">
             {% for field in entry_class.form_fields %}
             <label class="field">{{ entry_class.field_labels[field] }}
+                {% if field_types[field] == "checkbox" %}
+                <input type="checkbox" name="{{ field }}" value="1"
+                       {% if form[field] %}checked{% endif %}>
+                {% else %}
                 <input type="{{ field_types[field] }}" name="{{ field }}"
                        value="{{ form[field] if form[field] }}"
                        {% if field in required %}required{% endif %}>
+                {% endif %}
                 {% if entry_class.field_hints[field] %}
                 <span class="hint">{{ entry_class.field_hints[field] }}</span>
                 {% endif %}

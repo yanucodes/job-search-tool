@@ -60,7 +60,7 @@
                 <label for="status-{{ index }}">Status: </label>
                 <select id="status-{{ index }}" name="status"
                         onchange="this.form.submit()">
-                    {% for status in statuses %}
+                    {% for status in application.statuses %}
                     <option value="{{ status }}"
                             {% if status == application.status %}selected{% endif %}>
                         {{ application.status_labels.get(status, status) }}</option>

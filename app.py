@@ -153,13 +153,15 @@ def new_application():
         applied = request.form.get("applied", "").strip()
         contact = request.form.get("contact", "").strip()
         saved = request.form.get("saved", "").strip()
+        attended = bool(request.form.get("attended"))
         raw = request.form.get("priority", "")
         priority = int(raw) if raw.isdigit() and int(raw) in entries.PRIORITIES \
             else None
         if all(fields.values()):
             record = {"id": uuid.uuid4().hex, "published": published, **fields}
             tracker.add_application("manual", record, priority, applied,
-                                    entry_class.kind, contact, saved)
+                                    entry_class.kind, contact, saved,
+                                    attended)
             return redirect(url_for("applications"))
         missing = ", ".join(entry_class.field_labels[key]
                             for key in entries.REQUIRED_FIELDS
@@ -188,12 +190,16 @@ def update_status(index):
 
     The timeline date of the chosen status is stamped automatically.
 
+    Which statuses are on offer depends on the kind of entry, so the posted
+    one is checked against the entry's own.
+
     Args:
         index: Index of the application in the saved list.
     """
     status = request.form["status"]
-    if (0 <= index < len(tracker.load_applications())
-            and status in entries.STATUSES):
+    applications = tracker.load_applications()
+    if 0 <= index < len(applications) \
+            and status in applications[index].statuses:
         tracker.update_status(index, status)
     return redirect(url_for("applications"))
 

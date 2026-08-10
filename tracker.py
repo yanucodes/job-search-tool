@@ -110,10 +110,11 @@ def save_applications(applications):
 def write_latex_table(applications, start="", end=""):
     """Write the entries acted on as a LaTeX summary to the output directory.
 
-    Only entries with a first action recorded are included. Each kind of
-    Eigenbemühung gets its own section, numbered from one, so that the
-    applications stay countable next to the other efforts. Within a section,
-    each row shows what the entry was about next to its timeline.
+    Only entries the effort was actually made on are included -- what that
+    means is up to the kind, so a job fair only counts once attended. Each
+    kind gets its own section, numbered from one, so that the applications
+    stay countable next to the other efforts. Within a section, each row
+    shows what the entry was about next to its timeline.
 
     Args:
         applications: List of Entry objects.
@@ -123,7 +124,7 @@ def write_latex_table(applications, start="", end=""):
             after it are left out; when empty, there is no upper bound. Both
             bounds are inclusive.
     """
-    acted_on = sorted((a for a in applications if a.applied
+    acted_on = sorted((a for a in applications if a.reportable
                        and (not start or a.applied >= start)
                        and (not end or a.applied <= end)),
                       key=lambda a: a.applied)
@@ -143,7 +144,7 @@ def write_latex_table(applications, start="", end=""):
 
 
 def add_application(service, record, priority=None, applied="", kind="job",
-                    contact="", saved=""):
+                    contact="", saved="", attended=False):
     """Add an entry to the application list with an empty timeline.
 
     Args:
@@ -160,6 +161,7 @@ def add_application(service, record, priority=None, applied="", kind="job",
         contact: Optional contact person, e.g. of a recruiter.
         saved: Optional ISO date (YYYY-MM-DD) the entry was noted down on.
             Defaults to today.
+        attended: Whether an event was already attended.
     """
     applications = load_applications()
     entry_class = entries.REGISTRY.get(kind, entries.Entry)
@@ -169,6 +171,7 @@ def add_application(service, record, priority=None, applied="", kind="job",
              if key not in entries.RECORD_FIELDS}
     applications.append(entry_class(
         service=service, applied=applied, contact=contact, saved=saved,
+        attended=attended,
         priority=priority if priority in entries.PRIORITIES else None,
         extra=extra, **known))
     save_applications(applications)

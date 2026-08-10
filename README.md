@@ -98,15 +98,18 @@ Every kind shares the same timeline — a first action, a follow-up, a
 conversation and an outcome — and only relabels it, so the status dropdown
 and the date tracking work the same everywhere. A recruiter contact set to
 *invited* therefore reads "Unterlagen übermittelt" where an application
-reads "Einladung erhalten", and a job fair with nothing recorded yet counts
-as *planned* rather than *to apply*.
+reads "Einladung erhalten". A kind may also narrow the statuses it can be
+in: a job fair is only ever *planned* or *attended*, since the stages of an
+application do not apply to it.
 
-Only entries with a date in the first timeline field reach the PDF summary,
-which makes the list usable for planning as well as for reporting: a job
-fair you intend to visit is added with a *Date added* and no *Date visited*,
-so it shows up under *Job fairs* to keep track of but stays out of the
-summary. Filling in *Date visited* once you have been there is what moves it
-into the PDF.
+Only entries the effort was actually made on reach the PDF summary, and each
+kind decides what that means. That makes the list usable for planning as
+well as for reporting: a job fair has a single date — the day it takes
+place, known long in advance — and an *Attended* box of its own. A fair you
+intend to visit shows up under *Job fairs* to keep track of but stays out of
+the summary until that box is ticked, either on the form or with the status
+dropdown afterwards. Ticking it never changes the date, because the fair
+happens when it happens.
 
 The web interface is in English and the PDF summary in German, because the
 summary is what the Arbeitsagentur is handed. The timeline in an entry's
