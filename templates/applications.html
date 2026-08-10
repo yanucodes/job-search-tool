@@ -28,27 +28,29 @@
         <details {% if expand %}open{% endif %}>
             <summary>
                 <span class="status">{{ application.status }}</span>
-                {% if application.kind != default_kind %}
-                <span class="kind">{{ application.label }}</span>
-                {% endif %}
+                {% if application.kind == default_kind %}
                 {% if application.priority %}
                 <span class="priority">{{ priority_labels[application.priority] }} priority</span>
                 {% else %}
                 <span class="priority none">no priority</span>
                 {% endif %}
+                {% endif %}
                 <strong>{{ application.title }}</strong> -
                 {{ application.company }} ({{ application.saved }})
             </summary>
-            <p>{{ application.location }} · published
-               {{ application.published }} on {{ application.service }}</p>
+            <p>{{ application.location }}
+               {%- if application.published %} · published
+               {{ application.published }}{% endif %} · {{ application.service }}</p>
             {% if application.contact %}
-            <p>Contact: {{ application.contact }}</p>
+            <p>{{ application.field_labels["contact"] }}:
+               {{ application.contact }}</p>
             {% endif %}
-            <p><a href="{{ application.url }}" target="_blank">open posting</a></p>
+            <p><a href="{{ application.url }}" target="_blank">open link</a></p>
             <ul class="timeline">
                 {% for field in timeline_fields %}
                 {% if application[field] %}
-                <li>{{ field }}: {{ application[field] }}
+                <li>{{ application.timeline_labels[field] }}:
+                    {{ application[field] }}
                     {%- if field == "decided" %} ({{ application.decision }}){% endif %}</li>
                 {% endif %}
                 {% endfor %}
@@ -65,6 +67,7 @@
                     {% endfor %}
                 </select>
             </form>
+            {% if application.kind == default_kind %}
             <form method="POST"
                   action="{{ url_for('update_priority', index=index) }}">
                 <label for="priority-{{ index }}">Priority: </label>
@@ -79,6 +82,7 @@
                     {% endfor %}
                 </select>
             </form>
+            {% endif %}
             <form method="POST"
                   action="{{ url_for('delete_application', index=index) }}"
                   onsubmit="return confirm('Remove this job from your applications?');">

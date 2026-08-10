@@ -21,6 +21,10 @@ PRIORITY_LABELS = {1: "high", 2: "moderate", 3: "low"}
 RECORD_FIELDS = ["id", "title", "company", "location", "published", "url"]
 KNOWN_FIELDS = ({"service", "saved", "contact", "decision", "priority"}
                 | set(TIMELINE_FIELDS) | set(RECORD_FIELDS))
+REQUIRED_FIELDS = ["title", "company", "location", "url"]
+FIELD_TYPES = {"title": "text", "company": "text", "location": "text",
+               "url": "url", "contact": "text", "published": "date",
+               "applied": "date"}
 LATEX_SPECIAL_CHARS = {
     "\\": r"\textbackslash{}",
     "&": r"\&",
@@ -68,9 +72,17 @@ class Entry:
     every effort has the same shape: a first action, a follow-up, a
     conversation and an outcome.
 
+    The web interface is in English and the PDF summary in German, because
+    the summary is what the Arbeitsagentur is handed; the two sets of labels
+    below are kept apart for that reason.
+
     Attributes:
         kind: Value stored in the "kind" key, and the key into REGISTRY.
-        label: Name of the kind, shown as a badge in the web interface.
+        label: Name of one such entry, for the web interface.
+        group: Heading of the section this kind gets in the web interface.
+        form_fields: Which fields the manual form offers, in order.
+        field_labels: Label per form field, saying what to record in it.
+        field_hints: Optional help text per form field.
         section: Heading of the section this kind gets in the PDF summary.
         columns: Headings of the two table columns, as a (left, right) pair.
         timeline_labels: German label per timeline field.
@@ -78,7 +90,16 @@ class Entry:
     """
 
     kind = "job"
-    label = "Bewerbung"
+    label = "Job application"
+    group = "Applications"
+    form_fields = ["title", "company", "location", "url", "contact",
+                   "published", "applied"]
+    field_labels = {"title": "Job title", "company": "Company",
+                    "location": "Location", "url": "Link to the posting",
+                    "contact": "Contact person", "published": "Published",
+                    "applied": "Applied"}
+    field_hints = {"applied": "leave empty if not applied yet; may be a past"
+                              " date"}
     section = "Bewerbungen"
     columns = ("Stellenangebot", "Bewerbungsverlauf")
     timeline_labels = {
@@ -258,7 +279,19 @@ class RecruiterContact(Entry):
     """Contact with a private recruiter (Einschaltung eines Vermittlers)."""
 
     kind = "recruiter"
-    label = "Vermittlerkontakt"
+    label = "Recruiter contact"
+    group = "Recruiter contacts"
+    form_fields = ["title", "company", "contact", "location", "url",
+                   "applied"]
+    field_labels = {"title": "What the contact was about",
+                    "company": "Agency", "contact": "Contact person",
+                    "location": "Agency address",
+                    "url": "Agency website", "applied": "First contact"}
+    field_hints = {"title": "e.g. Kontakt mit privatem Personalvermittler",
+                   "company": "the agency, with its legal name if it differs"
+                              " from the brand",
+                   "contact": "who wrote to you, with their role",
+                   "applied": "when they first got in touch, or you did"}
     section = "Vermittlerkontakte"
     columns = ("Vermittler / Kontakt", "Verlauf")
     timeline_labels = {
@@ -282,7 +315,16 @@ class FairVisit(Entry):
     """Visit to a job fair or career event."""
 
     kind = "fair"
-    label = "Jobmesse"
+    label = "Job fair"
+    group = "Job fairs"
+    form_fields = ["title", "company", "location", "url", "contact",
+                   "applied"]
+    field_labels = {"title": "Event", "company": "Organiser",
+                    "location": "Venue", "url": "Event website",
+                    "contact": "Who you spoke to", "applied": "Date visited"}
+    field_hints = {"title": "e.g. heise Jobs IT-Tag Stuttgart",
+                   "contact": "optional, the people or companies you talked"
+                              " to at the stands"}
     section = "Jobmessen"
     columns = ("Veranstaltung", "Verlauf")
     timeline_labels = {
@@ -298,7 +340,17 @@ class NetworkEffort(Entry):
     """Any other documented effort, e.g. a speculative enquiry."""
 
     kind = "network"
-    label = "Sonstige Eigenbemühung"
+    label = "Networking"
+    group = "Networking"
+    form_fields = ["title", "company", "contact", "location", "url",
+                   "applied"]
+    field_labels = {"title": "What you did",
+                    "company": "Organisation or person",
+                    "contact": "Contact person", "location": "Place",
+                    "url": "Link", "applied": "Date"}
+    field_hints = {"title": "e.g. Initiativanfrage, Meetup, Empfehlung über"
+                            " Kontakt",
+                   "location": "or \"remote\" if it was not in person"}
     section = "Sonstige Eigenbemühungen"
     columns = ("Eigenbemühung", "Verlauf")
     timeline_labels = {

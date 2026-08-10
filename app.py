@@ -93,25 +93,35 @@ def index():
 def applications():
     """Show the jobs the user plans to apply for, grouped by progress.
 
-    The page has one section for jobs still to apply for, one for jobs the
-    application process is running on, and one for jobs that were turned
-    down. Each application is paired with its index in the saved list,
+    Job applications are split by how far they got: one section for those
+    still to apply for, one for those the process is running on, and one for
+    those that were turned down. Every other kind of Eigenbemühung gets a
+    section of its own, newest first, since those are recorded rather than
+    worked through. Each entry is paired with its index in the saved list,
     which the status form posts back.
     """
     applications = tracker.load_applications()
     numbered = list(enumerate(applications))
-    to_apply = sorted((e for e in numbered if e[1].status == "to apply"),
+    jobs = [e for e in numbered if e[1].kind == entries.Entry.kind]
+    to_apply = sorted((e for e in jobs if e[1].status == "to apply"),
                       key=lambda e: e[1].priority or 99)
-    applied = sorted((e for e in numbered
+    applied = sorted((e for e in jobs
                       if e[1].status not in ("to apply", "rejected")),
                      key=lambda e: e[1].applied)
-    rejected = sorted((e for e in numbered if e[1].status == "rejected"),
+    rejected = sorted((e for e in jobs if e[1].status == "rejected"),
                       key=lambda e: e[1].decided)
     groups = [
         ("To apply", to_apply),
         ("Applied ({})".format(len(applied)), applied),
         ("Rejected ({})".format(len(rejected)), rejected),
     ]
+    for entry_class in entries.KINDS[1:]:
+        of_kind = sorted((e for e in numbered
+                          if e[1].kind == entry_class.kind),
+                         key=lambda e: e[1].applied or e[1].saved,
+                         reverse=True)
+        groups.append(("{} ({})".format(entry_class.group, len(of_kind)),
+                       of_kind))
     return render_template("applications.html", groups=groups,
                            empty=not applications,
                            statuses=entries.STATUSES,
@@ -126,34 +136,46 @@ def applications():
 def new_application():
     """Add a job to the application list by hand.
 
-    GET shows a form with all fields. POST validates that the fields shown in
-    the PDF summary (title, company, location, url) are filled, then saves the
-    entry. An optional past "applied" date records an effort already made;
-    when omitted the entry starts in the "to apply" group. The kind decides
-    which Eigenbemühung it is and how it is worded in the PDF summary.
+    Which fields the form offers, and what they are called, depends on the
+    kind of Eigenbemühung being recorded: the "kind" query argument chooses
+    it on GET, a hidden field carries it on POST. POST validates that the
+    fields the PDF summary needs (title, company, location, url) are filled,
+    then saves the entry. An optional past date in the timeline field records
+    an effort already made; when omitted a job application starts in the
+    "to apply" group.
     """
     if request.method == "POST":
+        kind = request.form.get("kind", "")
+        entry_class = entries.REGISTRY.get(kind, entries.Entry)
         fields = {key: request.form.get(key, "").strip()
-                  for key in ("title", "company", "location", "url")}
+                  for key in entries.REQUIRED_FIELDS}
         published = request.form.get("published", "").strip()
         applied = request.form.get("applied", "").strip()
         contact = request.form.get("contact", "").strip()
-        kind = request.form.get("kind", "")
-        kind = kind if kind in entries.REGISTRY else entries.Entry.kind
         raw = request.form.get("priority", "")
         priority = int(raw) if raw.isdigit() and int(raw) in entries.PRIORITIES \
             else None
         if all(fields.values()):
             record = {"id": uuid.uuid4().hex, "published": published, **fields}
-            tracker.add_application("manual", record, priority, applied, kind,
-                                    contact)
+            tracker.add_application("manual", record, priority, applied,
+                                    entry_class.kind, contact)
             return redirect(url_for("applications"))
+        missing = ", ".join(entry_class.field_labels[key]
+                            for key in entries.REQUIRED_FIELDS
+                            if not fields[key])
         return render_template(
             "add_application.html", form=request.form,
-            error="Title, company, location and URL are required.",
+            error=f"Still needed: {missing}.", entry_class=entry_class,
+            field_types=entries.FIELD_TYPES,
+            required=entries.REQUIRED_FIELDS,
             priorities=entries.PRIORITIES,
             priority_labels=entries.PRIORITY_LABELS, kinds=entries.KINDS)
+    entry_class = entries.REGISTRY.get(request.args.get("kind", ""),
+                                       entries.Entry)
     return render_template("add_application.html", form={}, error=None,
+                           entry_class=entry_class,
+                           field_types=entries.FIELD_TYPES,
+                           required=entries.REQUIRED_FIELDS,
                            priorities=entries.PRIORITIES,
                            priority_labels=entries.PRIORITY_LABELS,
                            kinds=entries.KINDS)

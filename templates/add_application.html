@@ -1,59 +1,40 @@
 {% extends "base.html" %}
 
-{% block title %}Add application{% endblock %}
+{% block title %}Add {{ entry_class.label|lower }}{% endblock %}
 
 {% block content %}
-    <h1>Add application</h1>
+    <h1>Add {{ entry_class.label|lower }}</h1>
+    <div class="card">
+        <form method="GET" action="{{ url_for('new_application') }}">
+            <label for="kind">Kind of entry: </label>
+            <select id="kind" name="kind" onchange="this.form.submit()">
+                {% for kind in kinds %}
+                <option value="{{ kind.kind }}"
+                        {% if kind.kind == entry_class.kind %}selected{% endif %}>
+                    {{ kind.label }}</option>
+                {% endfor %}
+            </select>
+            <span class="hint">switching clears the form</span>
+        </form>
+    </div>
     <div class="card">
         {% if error %}
         <p class="error">{{ error }}</p>
         {% endif %}
         <form method="POST" action="{{ url_for('new_application') }}"
               class="stacked">
-            <label class="field">Kind
-                <select name="kind">
-                    {% for kind in kinds %}
-                    <option value="{{ kind.kind }}"
-                            {% if form.kind == kind.kind %}selected{% endif %}>
-                        {{ kind.label }}</option>
-                    {% endfor %}
-                </select>
-                <span class="hint">for anything but an application, Title is
-                    what the effort was and Company the agency or organiser
-                </span>
+            <input type="hidden" name="kind" value="{{ entry_class.kind }}">
+            {% for field in entry_class.form_fields %}
+            <label class="field">{{ entry_class.field_labels[field] }}
+                <input type="{{ field_types[field] }}" name="{{ field }}"
+                       value="{{ form[field] if form[field] }}"
+                       {% if field in required %}required{% endif %}>
+                {% if entry_class.field_hints[field] %}
+                <span class="hint">{{ entry_class.field_hints[field] }}</span>
+                {% endif %}
             </label>
-            <label class="field">Title
-                <input type="text" name="title"
-                       value="{{ form.title }}" required>
-            </label>
-            <label class="field">Company
-                <input type="text" name="company"
-                       value="{{ form.company }}" required>
-            </label>
-            <label class="field">Contact person
-                <input type="text" name="contact"
-                       value="{{ form.contact }}">
-                <span class="hint">optional, e.g. the recruiter you spoke to
-                </span>
-            </label>
-            <label class="field">Location
-                <input type="text" name="location"
-                       value="{{ form.location }}" required>
-            </label>
-            <label class="field">URL
-                <input type="url" name="url"
-                       value="{{ form.url }}" required>
-            </label>
-            <label class="field">Published
-                <input type="date" name="published"
-                       value="{{ form.published }}">
-            </label>
-            <label class="field">Applied
-                <input type="date" name="applied"
-                       value="{{ form.applied }}">
-                <span class="hint">leave empty if not applied yet; may be a
-                    past date</span>
-            </label>
+            {% endfor %}
+            {% if entry_class.kind == "job" %}
             <label class="field">Priority
                 <select name="priority">
                     <option value=""
@@ -66,7 +47,8 @@
                     {% endfor %}
                 </select>
             </label>
-            <input type="submit" value="Add application">
+            {% endif %}
+            <input type="submit" value="Add {{ entry_class.label|lower }}">
         </form>
     </div>
 {% endblock %}

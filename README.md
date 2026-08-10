@@ -46,10 +46,13 @@ and output files.
   can optionally pick a priority (`high`, `moderate`, `low`) from the
   dropdown next to *Add to my list*; leaving it on *no priority* saves the
   job without one.
-- **My applications** (`/applications`) — lists the saved jobs with their
-  status and priority, grouped into jobs still to apply for, jobs already
-  applied to and jobs that were turned down; the *Applied* and *Rejected*
-  headings also show how many jobs they hold. Each entry shows its status
+- **My applications** (`/applications`) — lists the saved entries with their
+  status and priority. Job applications are grouped by how far they got:
+  still to apply for, already applied to, and turned down. Every other kind
+  of entry gets a section of its own — *Recruiter contacts*, *Job fairs*,
+  *Networking* — listed newest first, since those are recorded rather than
+  worked through. Section headings show how many entries they hold, and a
+  section with none is left out. Each entry shows its status
   and priority at a glance. Click an entry to see its details and change
   the status (`to apply`, `applied`, `invited`, `interview`, `offer`,
   `rejected`); the date of each status change is recorded automatically,
@@ -60,14 +63,14 @@ and output files.
   (highest first, unprioritised last); jobs already applied to by the date
   you applied (oldest first), turned-down jobs by the date of the decision.
 - **Add manually** (`/applications/new`) — adds an entry to the list by hand,
-  for postings the review page never showed you. Title, company, location
-  and URL are required, as they make up the PDF summary; the publication
-  date, a priority, a contact person and the date you applied are optional.
-  Filling in the applied date records a past application, so the job starts
-  in the *Applied* group instead of *To apply*. The *Kind* dropdown chooses
-  what sort of effort the entry records (see below); for anything but a job
-  application, Title is what the effort was and Company the agency or
-  organiser.
+  for postings the review page never showed you. The *Kind of entry*
+  dropdown at the top chooses what sort of effort is being recorded (see
+  below) and reloads the form with the fields and names of that kind, so a
+  recruiter contact asks for the agency and who wrote to you rather than for
+  a job title and a posting. Four fields are always required, whatever they
+  are called, because the PDF summary is built from them; the rest are
+  optional. Filling in the date field records an effort already made, so a
+  job application starts in the *Applied* group instead of *To apply*.
 - **Generate PDF** (`/applications/pdf`) — compiles a PDF summary of the
   entries you acted on and how each went, using `pdflatex` (must be
   installed). Each kind of entry gets its own section, numbered from one
@@ -86,15 +89,25 @@ class in `entries.py` carrying the German labels it prints with:
 
 | Kind | Class | PDF section |
 |---|---|---|
-| Bewerbung | `Entry` | Bewerbungen |
-| Vermittlerkontakt | `RecruiterContact` | Vermittlerkontakte |
-| Jobmesse | `FairVisit` | Jobmessen |
-| Sonstige Eigenbemühung | `NetworkEffort` | Sonstige Eigenbemühungen |
+| Job application | `Entry` | Bewerbungen |
+| Recruiter contact | `RecruiterContact` | Vermittlerkontakte |
+| Job fair | `FairVisit` | Jobmessen |
+| Networking | `NetworkEffort` | Sonstige Eigenbemühungen |
 
 Every kind shares the same timeline — a first action, a follow-up, a
 conversation and an outcome — and only relabels it, so the status dropdown
-and the date tracking work the same everywhere. To add a kind, subclass
-`Entry`, override its class attributes and list it in `entries.KINDS`.
+and the date tracking work the same everywhere. A recruiter contact set to
+*invited* therefore reads "Unterlagen übermittelt" where an application
+reads "Einladung erhalten".
+
+The web interface is in English and the PDF summary in German, because the
+summary is what the Arbeitsagentur is handed. The timeline in an entry's
+details is shown in German too, so what you see there is what will be
+reported.
+
+To add a kind, subclass `Entry`, override its class attributes — the labels,
+which fields the form offers and what they are called — and list it in
+`entries.KINDS`.
 
 ## Demo
 
