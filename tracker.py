@@ -143,7 +143,7 @@ def write_latex_table(applications, start="", end=""):
 
 
 def add_application(service, record, priority=None, applied="", kind="job",
-                    contact=""):
+                    contact="", saved=""):
     """Add an entry to the application list with an empty timeline.
 
     Args:
@@ -154,10 +154,12 @@ def add_application(service, record, priority=None, applied="", kind="job",
             chosen priority.
         applied: Optional ISO date (YYYY-MM-DD) of the first action. When
             given it marks the entry as already acted on; when omitted the
-            timeline starts empty.
+            timeline starts empty and the entry is left out of the summary.
         kind: Which kind of Eigenbemühung this is, a key of entries.REGISTRY.
             Defaults to a plain job application.
         contact: Optional contact person, e.g. of a recruiter.
+        saved: Optional ISO date (YYYY-MM-DD) the entry was noted down on.
+            Defaults to today.
     """
     applications = load_applications()
     entry_class = entries.REGISTRY.get(kind, entries.Entry)
@@ -166,7 +168,7 @@ def add_application(service, record, priority=None, applied="", kind="job",
     extra = {key: value for key, value in record.items()
              if key not in entries.RECORD_FIELDS}
     applications.append(entry_class(
-        service=service, applied=applied, contact=contact,
+        service=service, applied=applied, contact=contact, saved=saved,
         priority=priority if priority in entries.PRIORITIES else None,
         extra=extra, **known))
     save_applications(applications)

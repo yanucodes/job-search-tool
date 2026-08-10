@@ -24,7 +24,7 @@ KNOWN_FIELDS = ({"service", "saved", "contact", "decision", "priority"}
 REQUIRED_FIELDS = ["title", "company", "location", "url"]
 FIELD_TYPES = {"title": "text", "company": "text", "location": "text",
                "url": "url", "contact": "text", "published": "date",
-               "applied": "date"}
+               "saved": "date", "applied": "date"}
 LATEX_SPECIAL_CHARS = {
     "\\": r"\textbackslash{}",
     "&": r"\&",
@@ -83,6 +83,8 @@ class Entry:
         form_fields: Which fields the manual form offers, in order.
         field_labels: Label per form field, saying what to record in it.
         field_hints: Optional help text per form field.
+        status_labels: What a status is called for this kind, where the
+            wording of a job application does not fit.
         section: Heading of the section this kind gets in the PDF summary.
         columns: Headings of the two table columns, as a (left, right) pair.
         timeline_labels: German label per timeline field.
@@ -100,6 +102,7 @@ class Entry:
                     "applied": "Applied"}
     field_hints = {"applied": "leave empty if not applied yet; may be a past"
                               " date"}
+    status_labels = {}
     section = "Bewerbungen"
     columns = ("Stellenangebot", "Bewerbungsverlauf")
     timeline_labels = {
@@ -173,6 +176,16 @@ class Entry:
         if self.applied:
             return "applied"
         return "to apply"
+
+    @property
+    def status_label(self):
+        """What the current status is called for this kind of entry.
+
+        Returns:
+            The status in the wording of this kind, e.g. "planned" rather
+            than "to apply" for a job fair.
+        """
+        return self.status_labels.get(self.status, self.status)
 
     def set_status(self, status):
         """Set the status by updating the timeline.
@@ -292,6 +305,8 @@ class RecruiterContact(Entry):
                               " from the brand",
                    "contact": "who wrote to you, with their role",
                    "applied": "when they first got in touch, or you did"}
+    status_labels = {"to apply": "not contacted yet", "applied": "in contact",
+                     "invited": "documents sent", "interview": "call held"}
     section = "Vermittlerkontakte"
     columns = ("Vermittler / Kontakt", "Verlauf")
     timeline_labels = {
@@ -317,14 +332,21 @@ class FairVisit(Entry):
     kind = "fair"
     label = "Job fair"
     group = "Job fairs"
-    form_fields = ["title", "company", "location", "url", "contact",
+    form_fields = ["title", "company", "location", "url", "saved", "contact",
                    "applied"]
     field_labels = {"title": "Event", "company": "Organiser",
                     "location": "Venue", "url": "Event website",
-                    "contact": "Who you spoke to", "applied": "Date visited"}
+                    "saved": "Date added", "contact": "Who you spoke to",
+                    "applied": "Date visited"}
     field_hints = {"title": "e.g. heise Jobs IT-Tag Stuttgart",
+                   "saved": "when you noted the fair down; defaults to today",
                    "contact": "optional, the people or companies you talked"
-                              " to at the stands"}
+                              " to at the stands",
+                   "applied": "leave empty while you are only planning to go"
+                              " -- a fair enters the PDF summary once this is"
+                              " set"}
+    status_labels = {"to apply": "planned", "applied": "visited",
+                     "invited": "contacts made", "interview": "follow-up"}
     section = "Jobmessen"
     columns = ("Veranstaltung", "Verlauf")
     timeline_labels = {
@@ -351,6 +373,8 @@ class NetworkEffort(Entry):
     field_hints = {"title": "e.g. Initiativanfrage, Meetup, Empfehlung über"
                             " Kontakt",
                    "location": "or \"remote\" if it was not in person"}
+    status_labels = {"to apply": "planned", "applied": "done",
+                     "invited": "answered", "interview": "spoke"}
     section = "Sonstige Eigenbemühungen"
     columns = ("Eigenbemühung", "Verlauf")
     timeline_labels = {

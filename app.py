@@ -152,13 +152,14 @@ def new_application():
         published = request.form.get("published", "").strip()
         applied = request.form.get("applied", "").strip()
         contact = request.form.get("contact", "").strip()
+        saved = request.form.get("saved", "").strip()
         raw = request.form.get("priority", "")
         priority = int(raw) if raw.isdigit() and int(raw) in entries.PRIORITIES \
             else None
         if all(fields.values()):
             record = {"id": uuid.uuid4().hex, "published": published, **fields}
             tracker.add_application("manual", record, priority, applied,
-                                    entry_class.kind, contact)
+                                    entry_class.kind, contact, saved)
             return redirect(url_for("applications"))
         missing = ", ".join(entry_class.field_labels[key]
                             for key in entries.REQUIRED_FIELDS

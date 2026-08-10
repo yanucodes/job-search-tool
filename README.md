@@ -98,7 +98,15 @@ Every kind shares the same timeline — a first action, a follow-up, a
 conversation and an outcome — and only relabels it, so the status dropdown
 and the date tracking work the same everywhere. A recruiter contact set to
 *invited* therefore reads "Unterlagen übermittelt" where an application
-reads "Einladung erhalten".
+reads "Einladung erhalten", and a job fair with nothing recorded yet counts
+as *planned* rather than *to apply*.
+
+Only entries with a date in the first timeline field reach the PDF summary,
+which makes the list usable for planning as well as for reporting: a job
+fair you intend to visit is added with a *Date added* and no *Date visited*,
+so it shows up under *Job fairs* to keep track of but stays out of the
+summary. Filling in *Date visited* once you have been there is what moves it
+into the PDF.
 
 The web interface is in English and the PDF summary in German, because the
 summary is what the Arbeitsagentur is handed. The timeline in an entry's

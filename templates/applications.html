@@ -27,7 +27,7 @@
     <div class="card">
         <details {% if expand %}open{% endif %}>
             <summary>
-                <span class="status">{{ application.status }}</span>
+                <span class="status">{{ application.status_label }}</span>
                 {% if application.kind == default_kind %}
                 {% if application.priority %}
                 <span class="priority">{{ priority_labels[application.priority] }} priority</span>
@@ -63,7 +63,7 @@
                     {% for status in statuses %}
                     <option value="{{ status }}"
                             {% if status == application.status %}selected{% endif %}>
-                        {{ status }}</option>
+                        {{ application.status_labels.get(status, status) }}</option>
                     {% endfor %}
                 </select>
             </form>
