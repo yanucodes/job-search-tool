@@ -123,6 +123,9 @@ class Entry:
             wording of a job application does not fit.
         status_dated: Whether a status change records a date of its own, and
             so whether the status form asks for one.
+        timeline_ordered: Whether the stages of the timeline follow one
+            another, so that reaching one means the later ones have not
+            happened. False where they may happen in any order.
         section: Heading of the section this kind gets in the PDF summary.
         columns: Headings of the two table columns, as a (left, right) pair.
         timeline_labels: German label per timeline field.
@@ -144,6 +147,7 @@ class Entry:
     statuses = STATUSES
     status_labels = {}
     status_dated = True
+    timeline_ordered = True
     section = "Bewerbungen"
     columns = ("Stellenangebot", "Bewerbungsverlauf")
     timeline_labels = {
@@ -214,18 +218,43 @@ class Entry:
         """
         return bool(self.applied)
 
+    def last_stage(self):
+        """Return the timeline field that was acted on most recently.
+
+        A field holding several dates is judged by its latest one. Stages
+        sharing a date are ranked by their place in the timeline, the later
+        one winning.
+
+        Returns:
+            Name of that field, or "" when nothing is recorded yet.
+        """
+        dated = []
+        for position, field in enumerate(TIMELINE_FIELDS):
+            value = getattr(self, field)
+            dates = [date for date in
+                     (value if field in MULTI_FIELDS else [value]) if date]
+            if dates:
+                dated.append((max(dates), position, field))
+        return max(dated)[2] if dated else ""
+
     @property
     def status(self):
         """Status of the entry, derived from its timeline.
 
-        The status is the latest timeline event: the decision if one was
-        made, otherwise "interview", "invited", "applied" or "to apply".
+        The decision, once made, is the status: it is what became of the
+        effort. Before that, a timeline whose stages follow one another
+        reports the furthest stage reached, while one whose stages do not
+        reports the stage acted on last, a later stage there saying nothing
+        about the ones before it.
 
         Returns:
             Status as a string, one of STATUSES.
         """
         if self.decision:
             return self.decision
+        if not self.timeline_ordered:
+            stage = self.last_stage()
+            return stage if stage in STATUSES else "to apply"
         if self.interview:
             return "interview"
         if self.invited:
@@ -247,9 +276,13 @@ class Entry:
     def set_status(self, status, date=""):
         """Set the status by updating the timeline.
 
-        The timeline date of the new status is set to the given day, later
-        dates and the decision are cleared, and earlier dates are kept. The
-        status "to apply" clears the whole timeline.
+        The timeline date of the new status is set to the given day and
+        earlier dates are kept. Where the stages follow one another, the
+        later ones are cleared along with the decision, since reaching a
+        stage means what came after it has not happened yet; where they do
+        not, nothing is cleared, as the stages say nothing about each
+        other. Either way the status before anything happened clears the
+        whole timeline, which is how a mistake is taken back.
 
         A field that holds several dates keeps the ones it has and takes the
         new one alongside them, so setting the status to "interview" again
@@ -262,17 +295,27 @@ class Entry:
                 to today.
         """
         field = "decided" if status in DECISIONS else status
-        position = TIMELINE_FIELDS.index(field) \
-            if field in TIMELINE_FIELDS else -1
-        if position >= 0:
-            date = date or datetime.date.today().isoformat()
-            if field in MULTI_FIELDS:
-                date = sorted(set(getattr(self, field)) | {date})
-            setattr(self, field, date)
-        for later_field in TIMELINE_FIELDS[position + 1:]:
-            setattr(self, later_field,
-                    [] if later_field in MULTI_FIELDS else "")
-        self.decision = status if status in DECISIONS else ""
+        if field not in TIMELINE_FIELDS:
+            self.clear_timeline()
+            return
+        date = date or datetime.date.today().isoformat()
+        if field in MULTI_FIELDS:
+            date = sorted(set(getattr(self, field)) | {date})
+        setattr(self, field, date)
+        if status in DECISIONS:
+            self.decision = status
+        elif self.timeline_ordered:
+            self.decision = ""
+            for later_field in TIMELINE_FIELDS[
+                    TIMELINE_FIELDS.index(field) + 1:]:
+                setattr(self, later_field,
+                        [] if later_field in MULTI_FIELDS else "")
+
+    def clear_timeline(self):
+        """Forget every date and the decision, leaving nothing recorded."""
+        for field in TIMELINE_FIELDS:
+            setattr(self, field, [] if field in MULTI_FIELDS else "")
+        self.decision = ""
 
     def set_priority(self, priority):
         """Set or clear the priority.
@@ -380,7 +423,12 @@ class Entry:
 
 
 class RecruiterContact(Entry):
-    """Contact with a private recruiter (Einschaltung eines Vermittlers)."""
+    """Contact with a private recruiter (Einschaltung eines Vermittlers).
+
+    Its stages are not a ladder the way an application's are: documents go
+    out before or after a first call, and either may be repeated, so
+    recording one must not take the others away.
+    """
 
     kind = "recruiter"
     label = "Recruiter contact"
@@ -399,6 +447,7 @@ class RecruiterContact(Entry):
                    "applied": "when they first got in touch, or you did"}
     status_labels = {"to apply": "not contacted yet", "applied": "in contact",
                      "invited": "documents sent", "interview": "call held"}
+    timeline_ordered = False
     section = "Vermittlerkontakte"
     columns = ("Vermittler / Kontakt", "Verlauf")
     timeline_labels = {
