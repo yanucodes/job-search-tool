@@ -220,6 +220,19 @@ class Entry:
         return bool(self.applied)
 
     @property
+    def entry_date(self):
+        """The date the entry stands on, for reading it at a glance.
+
+        That is the day it is about -- applied, first contacted, or the day
+        an event takes place -- and, while nothing has happened yet, the
+        day the entry was noted down, so that a card always carries a date.
+
+        Returns:
+            ISO date (YYYY-MM-DD).
+        """
+        return self.applied or self.saved
+
+    @property
     def effort_date(self):
         """The day the effort counts as made on.
 

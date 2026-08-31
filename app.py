@@ -196,7 +196,7 @@ def entry_list(page):
     entry_class = KIND_PAGES[page]
     of_kind = sorted((e for e in enumerate(tracker.load_applications())
                       if e[1].kind == entry_class.kind),
-                     key=lambda e: e[1].applied or e[1].saved, reverse=True)
+                     key=lambda e: e[1].entry_date, reverse=True)
     return render_entry_list(
         "{} ({})".format(entry_class.group, len(of_kind)),
         [("", of_kind)],
