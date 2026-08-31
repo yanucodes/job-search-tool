@@ -50,8 +50,11 @@ PDF*, so both are always one click away.
   job without one.
 - **My applications** (`/applications`) — lists the saved job applications
   with their status and priority, grouped by how far they got: still to
-  apply for, already applied to, and turned down. Each entry shows its status
-  and priority at a glance. Click an entry to see its details and change
+  apply for, already applied to, and turned down. Each entry shows its
+  status, its priority and the date it stands on at a glance — the day it is
+  about, which is the day you applied, first made contact, or the day an
+  event takes place, and the day you noted it down while nothing has
+  happened yet. Click an entry to see its details and change
   the status (`to apply`, `applied`, `invited`, `interview`, `offer`,
   `rejected`): pick the new status, pick the date it was reached on — the
   field starts on today, but any past date will do — and press *Change
