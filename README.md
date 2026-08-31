@@ -55,8 +55,13 @@ and output files.
   section with none is left out. Each entry shows its status
   and priority at a glance. Click an entry to see its details and change
   the status (`to apply`, `applied`, `invited`, `interview`, `offer`,
-  `rejected`); the date of each status change is recorded automatically,
-  building a timeline of the application process. You can also set or clear
+  `rejected`): pick the new status, pick the date it was reached on — the
+  field starts on today, but any past date will do — and press *Change
+  status*. That builds a timeline of the application process. An
+  application can go to `interview` more than once: each date is kept
+  alongside the earlier ones, so a second and third round are all recorded.
+  Falling back to an earlier status clears them again, together with the
+  rest of the later timeline. You can also set or clear
   the priority here, or remove the entry from the list with *Delete*; a
   removed job stays in the seen list, so later searches will not offer it
   again. Jobs still to apply for are ordered by priority
@@ -98,9 +103,12 @@ Every kind shares the same timeline — a first action, a follow-up, a
 conversation and an outcome — and only relabels it, so the status dropdown
 and the date tracking work the same everywhere. A recruiter contact set to
 *invited* therefore reads "Unterlagen übermittelt" where an application
-reads "Einladung erhalten". A kind may also narrow the statuses it can be
+reads "Einladung erhalten". Several conversations are numbered in the
+summary — "Vorstellungsgespräch 1", "Vorstellungsgespräch 2" — while a
+single one stays unnumbered. A kind may also narrow the statuses it can be
 in: a job fair is only ever *planned* or *attended*, since the stages of an
-application do not apply to it.
+application do not apply to it, and it is the one kind whose status form
+has no date field.
 
 Only entries the effort was actually made on reach the PDF summary, and each
 kind decides what that means. That makes the list usable for planning as
