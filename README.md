@@ -93,7 +93,9 @@ PDF*, so both are always one click away.
   covers, and always as a range between two dates: a bound you left open is
   filled in with the date the summary reaches to anyway — the oldest entry
   in it at the start, today at the end. Generating without either date
-  therefore reads `Zeitraum: 04.03.2026 -- 31.08.2026`.
+  therefore reads `Zeitraum: 04.03.2026 -- 31.08.2026`. That line is the
+  whole header; the day the file was generated on is not part of what is
+  reported.
 
 ## Kinds of entry
 
@@ -115,10 +117,9 @@ and the date tracking work the same everywhere. A recruiter contact set to
 *invited* therefore reads "Unterlagen übermittelt" where an application
 reads "Einladung erhalten". Several conversations are numbered in the
 summary — "Vorstellungsgespräch 1", "Vorstellungsgespräch 2" — while a
-single one stays unnumbered. A kind may also narrow the statuses it can be
-in: a job fair is only ever *planned* or *attended*, since the stages of an
-application do not apply to it, and it is the one kind whose status form
-has no date field.
+single one stays unnumbered. A kind may also change the statuses it can be
+in: a job fair goes *planned* → *registered* → *attended*, the stages of an
+application not applying to it.
 
 What a kind does not share is whether its stages follow one another. An
 application is a ladder — an invitation comes before an interview — so
@@ -131,12 +132,18 @@ contacted yet*, which clears the whole timeline.
 
 Only entries the effort was actually made on reach the PDF summary, and each
 kind decides what that means. That makes the list usable for planning as
-well as for reporting: a job fair has a single date — the day it takes
-place, known long in advance — and an *Attended* box of its own. A fair you
-intend to visit shows up under *Job fairs* to keep track of but stays out of
-the summary until that box is ticked, either on the form or with the status
-dropdown afterwards. Ticking it never changes the date, because the fair
-happens when it happens.
+well as for reporting: a job fair carries the day it takes place, known long
+in advance, so one you intend to visit shows up under *Job fairs* to keep
+track of but stays out of the summary until you have been there — an
+*Attended* box on the form, or the status dropdown afterwards.
+
+Going to a fair is two documented steps, and the summary reports both:
+`Angemeldet am` when you signed up and `Besucht am` the day you were there.
+Set the status to *registered* with the date you signed up on, and to
+*attended* with the day of the fair, which is what that second date is.
+Until then the same date is labelled `Findet statt am` in the entry's
+details, a day still ahead rather than one visited. A fair that took no
+registration simply has the one line.
 
 The web interface is in English and the PDF summary in German, because the
 summary is what the Arbeitsagentur is handed. The timeline in an entry's
