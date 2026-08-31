@@ -120,6 +120,15 @@ in: a job fair is only ever *planned* or *attended*, since the stages of an
 application do not apply to it, and it is the one kind whose status form
 has no date field.
 
+What a kind does not share is whether its stages follow one another. An
+application is a ladder — an invitation comes before an interview — so
+setting it back to an earlier status clears the later dates, which is how a
+status set by mistake is taken back. A recruiter contact is not: documents
+go out before or after a first call, and recording one leaves the others
+where they are. There, the status shown is the stage acted on last rather
+than the furthest one reached, and the way to undo a mistake is *not
+contacted yet*, which clears the whole timeline.
+
 Only entries the effort was actually made on reach the PDF summary, and each
 kind decides what that means. That makes the list usable for planning as
 well as for reporting: a job fair has a single date — the day it takes
