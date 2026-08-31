@@ -27,7 +27,7 @@ DOC_HEADER = r"""\documentclass{article}
 \setlength{\tabcolsep}{10pt}
 \begin{document}
 \section*{Übersicht der Eigenbemühungen}
-Stand: %s
+%sStand: %s
 """
 SECTION_HEADER = r"""\subsection*{%s}
 \begin{longtable}{|c|p{0.55\textwidth}|p{0.33\textwidth}|}
@@ -107,6 +107,35 @@ def save_applications(applications):
     write_latex_table(applications)
 
 
+def format_period(start, end):
+    """Describe the period a summary covers, for the line under its title.
+
+    Which entries a summary holds is not otherwise visible in it -- a month
+    with little to report looks like a year with little to report -- so the
+    period it was generated for is stated. A bound that was left open is
+    named as such rather than filled in with a date that was never asked
+    for.
+
+    Args:
+        start: Optional ISO date (YYYY-MM-DD) of the lower bound.
+        end: Optional ISO date (YYYY-MM-DD) of the upper bound.
+
+    Returns:
+        The period as a line of LaTeX, or "" when neither bound was given
+        and the summary is of everything.
+    """
+    if start and end:
+        period = "{} -- {}".format(entries.format_date(start),
+                                   entries.format_date(end))
+    elif start:
+        period = "ab {}".format(entries.format_date(start))
+    elif end:
+        period = "bis {}".format(entries.format_date(end))
+    else:
+        return ""
+    return "Zeitraum: %s \\\\\n" % period
+
+
 def write_latex_table(applications, start="", end=""):
     """Write the entries acted on as a LaTeX summary to the output directory.
 
@@ -114,7 +143,9 @@ def write_latex_table(applications, start="", end=""):
     means is up to the kind, so a job fair only counts once attended. Each
     kind gets its own section, numbered from one, so that the applications
     stay countable next to the other efforts. Within a section, each row
-    shows what the entry was about next to its timeline.
+    shows what the entry was about next to its timeline. The period the
+    bounds below stand for is named under the title, so that a summary says
+    what it covers.
 
     Args:
         applications: List of Entry objects.
@@ -137,8 +168,9 @@ def write_latex_table(applications, start="", end=""):
         rows = [entry.latex_row(number)
                 for number, entry in enumerate(of_kind, start=1)]
         sections.append(header + "".join(rows) + SECTION_FOOTER)
-    document = (DOC_HEADER % entries.format_date(
-        datetime.date.today().isoformat()) + "".join(sections) + DOC_FOOTER)
+    preamble = DOC_HEADER % (format_period(start, end), entries.format_date(
+        datetime.date.today().isoformat()))
+    document = preamble + "".join(sections) + DOC_FOOTER
     with open(output_path(APPLICATIONS_TABLE), "w", encoding="utf-8") as f:
         f.write(document)
 
