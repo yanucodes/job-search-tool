@@ -27,7 +27,7 @@ DOC_HEADER = r"""\documentclass{article}
 \setlength{\tabcolsep}{10pt}
 \begin{document}
 \section*{Übersicht der Eigenbemühungen}
-%sStand: %s
+Zeitraum: %s -- %s
 """
 SECTION_HEADER = r"""\subsection*{%s}
 \begin{longtable}{|c|p{0.55\textwidth}|p{0.33\textwidth}|}
@@ -108,15 +108,15 @@ def save_applications(applications):
 
 
 def format_period(start, end, oldest):
-    """Describe the period a summary covers, for the line under its title.
+    """Return the ends of the period a summary covers, as printed dates.
 
     Which entries a summary holds is not otherwise visible in it -- a month
     with little to report looks like a year with little to report -- so the
-    period it was generated for is stated, always as a range between two
-    dates. A bound left open is filled in with the date the summary reaches
-    to anyway: its oldest entry at the near end, today at the far end. A
-    range is never printed backwards, so a start date in the future closes
-    the period on itself.
+    period it was generated for is stated under the title, always as a
+    range between two dates. A bound left open is filled in with the date
+    the summary reaches to anyway: its oldest entry at the near end, today
+    at the far end. A range is never printed backwards, so a start date in
+    the future closes the period on itself.
 
     Args:
         start: Optional ISO date (YYYY-MM-DD) of the lower bound.
@@ -125,12 +125,12 @@ def format_period(start, end, oldest):
             it holds none and there is nothing to open the range on.
 
     Returns:
-        The period as a line of LaTeX.
+        The two ends of the period as a (start, end) pair of dates in the
+        format the summary prints.
     """
     end = end or datetime.date.today().isoformat()
     start = start or oldest or end
-    return "Zeitraum: %s -- %s \\\\\n" % (entries.format_date(start),
-                                          entries.format_date(max(start, end)))
+    return (entries.format_date(start), entries.format_date(max(start, end)))
 
 
 def write_latex_table(applications, start="", end=""):
@@ -166,16 +166,15 @@ def write_latex_table(applications, start="", end=""):
         rows = [entry.latex_row(number)
                 for number, entry in enumerate(of_kind, start=1)]
         sections.append(header + "".join(rows) + SECTION_FOOTER)
-    preamble = DOC_HEADER % (
-        format_period(start, end, acted_on[0].applied if acted_on else ""),
-        entries.format_date(datetime.date.today().isoformat()))
+    preamble = DOC_HEADER % format_period(
+        start, end, acted_on[0].applied if acted_on else "")
     document = preamble + "".join(sections) + DOC_FOOTER
     with open(output_path(APPLICATIONS_TABLE), "w", encoding="utf-8") as f:
         f.write(document)
 
 
 def add_application(service, record, priority=None, applied="", kind="job",
-                    contact="", saved="", attended=False):
+                    contact="", saved="", attended=False, invited=""):
     """Add an entry to the application list with an empty timeline.
 
     Args:
@@ -193,6 +192,8 @@ def add_application(service, record, priority=None, applied="", kind="job",
         saved: Optional ISO date (YYYY-MM-DD) the entry was noted down on.
             Defaults to today.
         attended: Whether an event was already attended.
+        invited: Optional ISO date (YYYY-MM-DD) of the second step of the
+            timeline, e.g. the day an event was registered for.
     """
     applications = load_applications()
     entry_class = entries.REGISTRY.get(kind, entries.Entry)
@@ -201,8 +202,8 @@ def add_application(service, record, priority=None, applied="", kind="job",
     extra = {key: value for key, value in record.items()
              if key not in entries.RECORD_FIELDS}
     applications.append(entry_class(
-        service=service, applied=applied, contact=contact, saved=saved,
-        attended=attended,
+        service=service, applied=applied, invited=invited, contact=contact,
+        saved=saved, attended=attended,
         priority=priority if priority in entries.PRIORITIES else None,
         extra=extra, **known))
     save_applications(applications)
