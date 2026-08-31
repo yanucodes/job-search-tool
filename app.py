@@ -37,6 +37,21 @@ def get_pending_jobs(refresh=False):
     return pending_jobs
 
 
+@app.context_processor
+def toolbar():
+    """Supply what the toolbar carried by every page needs.
+
+    Adding an entry and generating the summary are reachable from anywhere
+    in the tool, so that toolbar sits in the base template rather than on
+    one page. Offering the summary is only worth it once something is
+    saved to summarize.
+
+    Returns:
+        Dictionary of variables added to the context of every template.
+    """
+    return {"has_entries": bool(tracker.load_applications())}
+
+
 @app.route("/review")
 def review():
     """Show the next new job with its description for review."""
@@ -134,7 +149,7 @@ def applications():
                            expand=request.args.get("open") == "1")
 
 
-@app.route("/applications/new", methods=["GET", "POST"])
+@app.route("/new", methods=["GET", "POST"])
 def new_application():
     """Add a job to the application list by hand.
 
@@ -239,7 +254,7 @@ def delete_application(index):
     return redirect(url_for("applications"))
 
 
-@app.route("/applications/pdf")
+@app.route("/pdf")
 def applications_pdf():
     """Generate a PDF summary of the application list and return it.
 

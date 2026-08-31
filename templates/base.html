@@ -11,6 +11,19 @@
       <a href="{{ url_for('review') }}" class="button">Review new jobs</a>
       <a href="{{ url_for('applications') }}" class="button">My applications</a>
     </nav>
+    <div class="toolbar">
+      <a href="{{ url_for('new_application') }}" class="button">Add manually</a>
+      {% if has_entries %}
+      <form method="GET" action="{{ url_for('applications_pdf') }}"
+            target="_blank">
+        <label for="pdf-start">Applied from: </label>
+        <input type="date" id="pdf-start" name="start">
+        <label for="pdf-end">to: </label>
+        <input type="date" id="pdf-end" name="end">
+        <input type="submit" value="Generate PDF">
+      </form>
+      {% endif %}
+    </div>
     {% block content %}{% endblock %}
   </body>
 </html>
