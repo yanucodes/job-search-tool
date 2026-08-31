@@ -15,6 +15,10 @@ import tracker
 app = Flask(__name__)
 
 APPLICATIONS_PDF = "applications.pdf"
+# The kinds listed away from the applications page, by the path of their
+# page. Taken from the registry, so a new kind brings its page with it.
+KIND_PAGES = {entry_class.page: entry_class
+              for entry_class in entries.KINDS[1:]}
 
 pending_jobs = None  # jobs found by the last search, None before the first
 
@@ -39,17 +43,36 @@ def get_pending_jobs(refresh=False):
 
 @app.context_processor
 def toolbar():
-    """Supply what the toolbar carried by every page needs.
+    """Supply what the navigation and toolbar of every page need.
 
-    Adding an entry and generating the summary are reachable from anywhere
-    in the tool, so that toolbar sits in the base template rather than on
-    one page. Offering the summary is only worth it once something is
-    saved to summarize.
+    Each kind of entry has a list page of its own, and adding an entry and
+    generating the summary are reachable from anywhere in the tool, so both
+    bars sit in the base template rather than on one page. Offering the
+    summary is only worth it once something is saved to summarize.
 
     Returns:
         Dictionary of variables added to the context of every template.
     """
-    return {"has_entries": bool(tracker.load_applications())}
+    pages = [(entries.Entry.group, url_for("applications"))]
+    pages += [(entry_class.group, url_for("entry_list", page=page))
+              for page, entry_class in KIND_PAGES.items()]
+    return {"nav_pages": pages,
+            "has_entries": bool(tracker.load_applications())}
+
+
+def entry_page(entry):
+    """Return the address of the list page an entry is shown on.
+
+    Args:
+        entry: Entry a form was posted for, or the class of one, since the
+            page belongs to the kind rather than to the entry.
+
+    Returns:
+        URL of that entry's page, to return to once the change is made.
+    """
+    if entry.page in KIND_PAGES:
+        return url_for("entry_list", page=entry.page)
+    return url_for("applications")
 
 
 @app.route("/review")
@@ -105,21 +128,45 @@ def index():
     return redirect(url_for("applications"))
 
 
+def render_entry_list(heading, groups, empty):
+    """Render a page listing saved entries.
+
+    Each entry is paired with its index in the saved list, which the status
+    form posts back. The status form's date field starts on today, the day a
+    status is most often changed on.
+
+    Args:
+        heading: Heading of the page.
+        groups: List of (heading, entries) pairs, where each entry is an
+            (index, Entry) pair. A group heading may be empty, for a page
+            that is one list rather than several.
+        empty: What to say when the page has nothing to list, or "" when it
+            has something.
+
+    Returns:
+        The rendered page.
+    """
+    return render_template("entry_list.html", heading=heading, groups=groups,
+                           empty=empty,
+                           priorities=entries.PRIORITIES,
+                           priority_labels=entries.PRIORITY_LABELS,
+                           default_kind=entries.Entry.kind,
+                           today=datetime.date.today().isoformat(),
+                           expand=request.args.get("open") == "1")
+
+
 @app.route("/applications")
 def applications():
-    """Show the jobs the user plans to apply for, grouped by progress.
+    """Show the job applications, grouped by how far they got.
 
-    Job applications are split by how far they got: one section for those
-    still to apply for, one for those the process is running on, and one for
-    those that were turned down. Every other kind of Eigenbemühung gets a
-    section of its own, newest first, since those are recorded rather than
-    worked through. Each entry is paired with its index in the saved list,
-    which the status form posts back. The status form's date field starts on
-    today, the day a status is most often changed on.
+    One section holds those still to apply for, one those the process is
+    running on, and one those that were turned down. Applications still to
+    make are ordered by priority (highest first, unprioritised last), those
+    made by the date applied, and turned-down ones by the date of the
+    decision.
     """
-    applications = tracker.load_applications()
-    numbered = list(enumerate(applications))
-    jobs = [e for e in numbered if e[1].kind == entries.Entry.kind]
+    jobs = [e for e in enumerate(tracker.load_applications())
+            if e[1].kind == entries.Entry.kind]
     to_apply = sorted((e for e in jobs if e[1].status == "to apply"),
                       key=lambda e: e[1].priority or 99)
     applied = sorted((e for e in jobs
@@ -132,21 +179,28 @@ def applications():
         ("Applied ({})".format(len(applied)), applied),
         ("Rejected ({})".format(len(rejected)), rejected),
     ]
-    for entry_class in entries.KINDS[1:]:
-        of_kind = sorted((e for e in numbered
-                          if e[1].kind == entry_class.kind),
-                         key=lambda e: e[1].applied or e[1].saved,
-                         reverse=True)
-        groups.append(("{} ({})".format(entry_class.group, len(of_kind)),
-                       of_kind))
-    return render_template("applications.html", groups=groups,
-                           empty=not applications,
-                           statuses=entries.STATUSES,
-                           priorities=entries.PRIORITIES,
-                           priority_labels=entries.PRIORITY_LABELS,
-                           default_kind=entries.Entry.kind,
-                           today=datetime.date.today().isoformat(),
-                           expand=request.args.get("open") == "1")
+    return render_entry_list("My applications", groups,
+                             "" if jobs else "No saved applications yet.")
+
+
+@app.route("/<any({}):page>".format(",".join(KIND_PAGES)))
+def entry_list(page):
+    """Show the entries of one kind of Eigenbemühung, newest first.
+
+    These kinds are recorded rather than worked through, so their page is
+    one list ordered by date rather than sections by progress.
+
+    Args:
+        page: Path of the kind, a key of KIND_PAGES.
+    """
+    entry_class = KIND_PAGES[page]
+    of_kind = sorted((e for e in enumerate(tracker.load_applications())
+                      if e[1].kind == entry_class.kind),
+                     key=lambda e: e[1].applied or e[1].saved, reverse=True)
+    return render_entry_list(
+        "{} ({})".format(entry_class.group, len(of_kind)),
+        [("", of_kind)],
+        "" if of_kind else "No {} saved yet.".format(entry_class.group.lower()))
 
 
 @app.route("/new", methods=["GET", "POST"])
@@ -179,7 +233,7 @@ def new_application():
             tracker.add_application("manual", record, priority, applied,
                                     entry_class.kind, contact, saved,
                                     attended)
-            return redirect(url_for("applications"))
+            return redirect(entry_page(entry_class))
         missing = ", ".join(entry_class.field_labels[key]
                             for key in entries.REQUIRED_FIELDS
                             if not fields[key])
@@ -201,9 +255,9 @@ def new_application():
                            kinds=entries.KINDS)
 
 
-@app.route("/applications/<int:index>/status", methods=["POST"])
+@app.route("/entries/<int:index>/status", methods=["POST"])
 def update_status(index):
-    """Set the application status of a saved job.
+    """Set the status of a saved entry.
 
     The posted date is stamped as the timeline date of the chosen status;
     today is used when it is missing or not a date.
@@ -212,46 +266,53 @@ def update_status(index):
     one is checked against the entry's own.
 
     Args:
-        index: Index of the application in the saved list.
+        index: Index of the entry in the saved list.
     """
     status = request.form["status"]
     date = request.form.get("date", "").strip()
     applications = tracker.load_applications()
-    if 0 <= index < len(applications) \
-            and status in applications[index].statuses:
+    if not 0 <= index < len(applications):
+        return redirect(url_for("applications"))
+    entry = applications[index]
+    if status in entry.statuses:
         tracker.update_status(index, status,
                               date if entries.is_date(date) else "")
-    return redirect(url_for("applications"))
+    return redirect(entry_page(entry))
 
 
-@app.route("/applications/<int:index>/priority", methods=["POST"])
+@app.route("/entries/<int:index>/priority", methods=["POST"])
 def update_priority(index):
     """Set or clear the priority of a saved job.
 
     Args:
-        index: Index of the application in the saved list.
+        index: Index of the entry in the saved list.
     """
     raw = request.form.get("priority", "")
     priority = int(raw) if raw.isdigit() and int(raw) in entries.PRIORITIES \
         else None
-    if 0 <= index < len(tracker.load_applications()):
-        tracker.update_priority(index, priority)
-    return redirect(url_for("applications"))
+    applications = tracker.load_applications()
+    if not 0 <= index < len(applications):
+        return redirect(url_for("applications"))
+    tracker.update_priority(index, priority)
+    return redirect(entry_page(applications[index]))
 
 
-@app.route("/applications/<int:index>/delete", methods=["POST"])
+@app.route("/entries/<int:index>/delete", methods=["POST"])
 def delete_application(index):
-    """Remove a saved job from the application list.
+    """Remove a saved entry from the list.
 
-    The job stays in the seen list, so it will not reappear in future
+    A job stays in the seen list, so it will not reappear in future
     searches.
 
     Args:
-        index: Index of the application in the saved list.
+        index: Index of the entry in the saved list.
     """
-    if 0 <= index < len(tracker.load_applications()):
-        tracker.delete_application(index)
-    return redirect(url_for("applications"))
+    applications = tracker.load_applications()
+    if not 0 <= index < len(applications):
+        return redirect(url_for("applications"))
+    page = entry_page(applications[index])
+    tracker.delete_application(index)
+    return redirect(page)
 
 
 @app.route("/pdf")

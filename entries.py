@@ -113,7 +113,8 @@ class Entry:
     Attributes:
         kind: Value stored in the "kind" key, and the key into REGISTRY.
         label: Name of one such entry, for the web interface.
-        group: Heading of the section this kind gets in the web interface.
+        group: Heading of the page this kind gets in the web interface.
+        page: Path of that page, and what the navigation links to.
         form_fields: Which fields the manual form offers, in order.
         field_labels: Label per form field, saying what to record in it.
         field_hints: Optional help text per form field.
@@ -131,6 +132,7 @@ class Entry:
     kind = "job"
     label = "Job application"
     group = "Applications"
+    page = "applications"
     form_fields = ["title", "company", "location", "url", "contact",
                    "published", "applied"]
     field_labels = {"title": "Job title", "company": "Company",
@@ -383,6 +385,7 @@ class RecruiterContact(Entry):
     kind = "recruiter"
     label = "Recruiter contact"
     group = "Recruiter contacts"
+    page = "recruiters"
     form_fields = ["title", "company", "contact", "location", "url",
                    "applied"]
     field_labels = {"title": "What the contact was about",
@@ -427,6 +430,7 @@ class FairVisit(Entry):
     kind = "fair"
     label = "Job fair"
     group = "Job fairs"
+    page = "fairs"
     form_fields = ["title", "company", "location", "url", "applied",
                    "contact", "attended"]
     field_labels = {"title": "Event", "company": "Organiser",
@@ -481,6 +485,7 @@ class NetworkEffort(Entry):
     kind = "network"
     label = "Networking"
     group = "Networking"
+    page = "networking"
     form_fields = ["title", "company", "contact", "location", "url",
                    "applied"]
     field_labels = {"title": "What you did",

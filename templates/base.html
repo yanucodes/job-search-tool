@@ -9,7 +9,9 @@
   <body>
     <nav class="toolbar">
       <a href="{{ url_for('review') }}" class="button">Review new jobs</a>
-      <a href="{{ url_for('applications') }}" class="button">My applications</a>
+      {% for label, url in nav_pages %}
+      <a href="{{ url }}" class="button">{{ label }}</a>
+      {% endfor %}
     </nav>
     <div class="toolbar">
       <a href="{{ url_for('new_application') }}" class="button">Add manually</a>
