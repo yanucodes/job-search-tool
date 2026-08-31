@@ -51,6 +51,22 @@ def escape_latex(text):
     return "".join(LATEX_SPECIAL_CHARS.get(char, char) for char in text)
 
 
+def is_date(text):
+    """Check whether a string is a date the tracker can store.
+
+    Args:
+        text: String to check.
+
+    Returns:
+        True if it is a valid ISO date (YYYY-MM-DD).
+    """
+    try:
+        datetime.date.fromisoformat(text)
+    except ValueError:
+        return False
+    return True
+
+
 def format_date(date):
     """Format an ISO date for the LaTeX table.
 
@@ -86,6 +102,8 @@ class Entry:
         statuses: Which statuses this kind can be in.
         status_labels: What a status is called for this kind, where the
             wording of a job application does not fit.
+        status_dated: Whether a status change records a date of its own, and
+            so whether the status form asks for one.
         section: Heading of the section this kind gets in the PDF summary.
         columns: Headings of the two table columns, as a (left, right) pair.
         timeline_labels: German label per timeline field.
@@ -105,6 +123,7 @@ class Entry:
                               " date"}
     statuses = STATUSES
     status_labels = {}
+    status_dated = True
     section = "Bewerbungen"
     columns = ("Stellenangebot", "Bewerbungsverlauf")
     timeline_labels = {
@@ -204,21 +223,23 @@ class Entry:
         """
         return self.status_labels.get(self.status, self.status)
 
-    def set_status(self, status):
+    def set_status(self, status, date=""):
         """Set the status by updating the timeline.
 
-        The timeline date of the new status is set to today, later dates and
-        the decision are cleared, and earlier dates are kept. The status
-        "to apply" clears the whole timeline.
+        The timeline date of the new status is set to the given day, later
+        dates and the decision are cleared, and earlier dates are kept. The
+        status "to apply" clears the whole timeline.
 
         Args:
             status: New status, one of STATUSES.
+            date: ISO date (YYYY-MM-DD) the status was reached on. Defaults
+                to today.
         """
         field = "decided" if status in DECISIONS else status
         position = TIMELINE_FIELDS.index(field) \
             if field in TIMELINE_FIELDS else -1
         if position >= 0:
-            setattr(self, field, datetime.date.today().isoformat())
+            setattr(self, field, date or datetime.date.today().isoformat())
         for later_field in TIMELINE_FIELDS[position + 1:]:
             setattr(self, later_field, "")
         self.decision = status if status in DECISIONS else ""
@@ -370,6 +391,7 @@ class FairVisit(Entry):
                                " -- a fair enters the PDF summary at that"
                                " point, not before"}
     statuses = ["planned", "attended"]
+    status_dated = False
     section = "Jobmessen"
     columns = ("Veranstaltung", "Verlauf")
     timeline_labels = {
@@ -390,14 +412,16 @@ class FairVisit(Entry):
         """Only a fair actually attended is reported, and only with a date."""
         return bool(self.applied) and self.attended
 
-    def set_status(self, status):
+    def set_status(self, status, date=""):
         """Record whether the fair was attended.
 
         The date stays as it is: it is the day the fair takes place, which
-        does not change by going or not going.
+        does not change by going or not going, so a date passed in here is
+        ignored.
 
         Args:
             status: One of the statuses of this kind.
+            date: Unused, see above.
         """
         self.attended = status == "attended"
 

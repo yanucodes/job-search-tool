@@ -55,17 +55,22 @@
                 {% endif %}
                 {% endfor %}
             </ul>
-            <form method="POST"
+            <form method="POST" class="status-change"
                   action="{{ url_for('update_status', index=index) }}">
                 <label for="status-{{ index }}">Status: </label>
-                <select id="status-{{ index }}" name="status"
-                        onchange="this.form.submit()">
+                <select id="status-{{ index }}" name="status">
                     {% for status in application.statuses %}
                     <option value="{{ status }}"
                             {% if status == application.status %}selected{% endif %}>
                         {{ application.status_labels.get(status, status) }}</option>
                     {% endfor %}
                 </select>
+                {% if application.status_dated %}
+                <label for="status-date-{{ index }}">on </label>
+                <input type="date" id="status-date-{{ index }}" name="date"
+                       value="{{ today }}">
+                {% endif %}
+                <input type="submit" value="Change status">
             </form>
             {% if application.kind == default_kind %}
             <form method="POST"

@@ -123,6 +123,13 @@ input[type="date"]:focus {
     box-shadow: 0 0 0 3px rgba(74, 154, 120, 0.18);
 }
 
+form.status-change {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
 form.stacked {
     display: flex;
     flex-direction: column;

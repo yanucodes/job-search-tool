@@ -1,5 +1,6 @@
 """Web interface for job search."""
 
+import datetime
 import os
 import subprocess
 import uuid
@@ -98,7 +99,8 @@ def applications():
     those that were turned down. Every other kind of Eigenbemühung gets a
     section of its own, newest first, since those are recorded rather than
     worked through. Each entry is paired with its index in the saved list,
-    which the status form posts back.
+    which the status form posts back. The status form's date field starts on
+    today, the day a status is most often changed on.
     """
     applications = tracker.load_applications()
     numbered = list(enumerate(applications))
@@ -129,6 +131,7 @@ def applications():
                            priority_labels=entries.PRIORITY_LABELS,
                            timeline_fields=entries.TIMELINE_FIELDS,
                            default_kind=entries.Entry.kind,
+                           today=datetime.date.today().isoformat(),
                            expand=request.args.get("open") == "1")
 
 
@@ -188,7 +191,8 @@ def new_application():
 def update_status(index):
     """Set the application status of a saved job.
 
-    The timeline date of the chosen status is stamped automatically.
+    The posted date is stamped as the timeline date of the chosen status;
+    today is used when it is missing or not a date.
 
     Which statuses are on offer depends on the kind of entry, so the posted
     one is checked against the entry's own.
@@ -197,10 +201,12 @@ def update_status(index):
         index: Index of the application in the saved list.
     """
     status = request.form["status"]
+    date = request.form.get("date", "").strip()
     applications = tracker.load_applications()
     if 0 <= index < len(applications) \
             and status in applications[index].statuses:
-        tracker.update_status(index, status)
+        tracker.update_status(index, status,
+                              date if entries.is_date(date) else "")
     return redirect(url_for("applications"))
 
 

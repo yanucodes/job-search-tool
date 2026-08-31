@@ -177,15 +177,17 @@ def add_application(service, record, priority=None, applied="", kind="job",
     save_applications(applications)
 
 
-def update_status(index, status):
+def update_status(index, status, date=""):
     """Set the status of a saved entry by updating its timeline.
 
     Args:
         index: Index of the entry in the saved list.
         status: New status, one of entries.STATUSES.
+        date: Optional ISO date (YYYY-MM-DD) the status was reached on.
+            Defaults to today.
     """
     applications = load_applications()
-    applications[index].set_status(status)
+    applications[index].set_status(status, date)
     save_applications(applications)
 
 
