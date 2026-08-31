@@ -219,6 +219,18 @@ class Entry:
         """
         return bool(self.applied)
 
+    @property
+    def effort_date(self):
+        """The day the effort counts as made on.
+
+        It is what the summary sorts by and what its period is measured
+        against, so it is the day the entry earned its place there.
+
+        Returns:
+            ISO date (YYYY-MM-DD), or "" for an entry not reportable at all.
+        """
+        return self.applied
+
     def last_stage(self):
         """Return the timeline field that was acted on most recently.
 
@@ -517,31 +529,69 @@ class FairVisit(Entry):
     decision_labels = {"offer": "Zusage", "rejected": "Absage"}
 
     @property
+    def visited(self):
+        """Whether the fair has been to, rather than merely marked so.
+
+        A fair whose day has not come yet cannot have been visited,
+        whatever the entry says, so a box ticked too early corrects itself
+        when the day arrives instead of claiming a visit that never
+        happened.
+
+        Returns:
+            True if the fair was attended and its day has come.
+        """
+        return bool(self.applied) and self.attended \
+            and self.applied <= datetime.date.today().isoformat()
+
+    @property
     def status(self):
         """How far the fair got: planned, registered for, or attended."""
-        if self.attended:
+        if self.visited:
             return "attended"
         return "registered" if self.invited else "planned"
 
     @property
     def reportable(self):
-        """Only a fair actually attended is reported, and only with a date."""
-        return bool(self.applied) and self.attended
+        """Whether the fair belongs in the summary.
+
+        Signing up for one is a documented effort of its own, so a fair is
+        reported from the day it was registered on, with the visit added to
+        it once it has taken place. A fair that took no registration is
+        reported once visited, as before.
+
+        Returns:
+            True if the fair should appear in the summary.
+        """
+        return bool(self.invited) or self.visited
+
+    @property
+    def effort_date(self):
+        """The day the fair counts as an effort on.
+
+        That is the day it was visited, or, while the visit is still ahead,
+        the day it was signed up for -- a fair still to come must not be
+        counted in a period that has not reached it.
+
+        Returns:
+            ISO date (YYYY-MM-DD).
+        """
+        return self.applied if self.visited else self.invited
 
     def timeline_lines(self):
         """Call the day of the fair what it is until the fair was attended.
 
         The date the entry carries is the day the fair takes place, which
         is known while the visit is still ahead; it is a day visited on
-        only once the fair was attended. Only attended fairs are reported,
-        so the summary never sees the other wording.
+        only once the fair has been to. A fair signed up for is reported
+        before that, and reports the day it takes place as one still to
+        come.
 
         Returns:
             List of (field, label, date) triples, as for any entry.
         """
         lines = []
         for field, label, date in super().timeline_lines():
-            if field == "applied" and not self.attended:
+            if field == "applied" and not self.visited:
                 label = self.planned_label
             lines.append((field, label, date))
         return lines

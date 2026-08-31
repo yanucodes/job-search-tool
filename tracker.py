@@ -136,8 +136,9 @@ def format_period(start, end, oldest):
 def write_latex_table(applications, start="", end=""):
     """Write the entries acted on as a LaTeX summary to the output directory.
 
-    Only entries the effort was actually made on are included -- what that
-    means is up to the kind, so a job fair only counts once attended. Each
+    Only entries the effort was actually made on are included, and each is
+    placed on the day it was made -- what both mean is up to the kind, so a
+    job fair counts from the day it was signed up for. Each
     kind gets its own section, numbered from one, so that the applications
     stay countable next to the other efforts. Within a section, each row
     shows what the entry was about next to its timeline. The period the
@@ -154,9 +155,9 @@ def write_latex_table(applications, start="", end=""):
             bounds are inclusive.
     """
     acted_on = sorted((a for a in applications if a.reportable
-                       and (not start or a.applied >= start)
-                       and (not end or a.applied <= end)),
-                      key=lambda a: a.applied)
+                       and (not start or a.effort_date >= start)
+                       and (not end or a.effort_date <= end)),
+                      key=lambda a: a.effort_date)
     sections = []
     for entry_class in entries.KINDS:
         of_kind = [a for a in acted_on if a.kind == entry_class.kind]
@@ -167,7 +168,7 @@ def write_latex_table(applications, start="", end=""):
                 for number, entry in enumerate(of_kind, start=1)]
         sections.append(header + "".join(rows) + SECTION_FOOTER)
     preamble = DOC_HEADER % format_period(
-        start, end, acted_on[0].applied if acted_on else "")
+        start, end, acted_on[0].effort_date if acted_on else "")
     document = preamble + "".join(sections) + DOC_FOOTER
     with open(output_path(APPLICATIONS_TABLE), "w", encoding="utf-8") as f:
         f.write(document)
