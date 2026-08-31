@@ -47,12 +47,9 @@
             {% endif %}
             <p><a href="{{ application.url }}" target="_blank">open link</a></p>
             <ul class="timeline">
-                {% for field in timeline_fields %}
-                {% if application[field] %}
-                <li>{{ application.timeline_labels[field] }}:
-                    {{ application[field] }}
+                {% for field, label, date in application.timeline_lines() %}
+                <li>{{ label }}: {{ date }}
                     {%- if field == "decided" %} ({{ application.decision }}){% endif %}</li>
-                {% endif %}
                 {% endfor %}
             </ul>
             <form method="POST" class="status-change"

@@ -129,7 +129,6 @@ def applications():
                            statuses=entries.STATUSES,
                            priorities=entries.PRIORITIES,
                            priority_labels=entries.PRIORITY_LABELS,
-                           timeline_fields=entries.TIMELINE_FIELDS,
                            default_kind=entries.Entry.kind,
                            today=datetime.date.today().isoformat(),
                            expand=request.args.get("open") == "1")

@@ -14,6 +14,7 @@ existed have no "kind" key and load as plain job applications.
 import datetime
 
 TIMELINE_FIELDS = ["applied", "invited", "interview", "decided"]
+MULTI_FIELDS = ["interview"]
 DECISIONS = ["offer", "rejected"]
 STATUSES = ["to apply", "applied", "invited", "interview"] + DECISIONS
 PRIORITIES = [1, 2, 3]
@@ -49,6 +50,23 @@ def escape_latex(text):
         Text safe to place in a LaTeX document.
     """
     return "".join(LATEX_SPECIAL_CHARS.get(char, char) for char in text)
+
+
+def date_list(dates):
+    """Normalize a timeline field that may hold several dates.
+
+    Entries saved before a field could hold more than one date store a
+    single string there, which is that field's whole timeline.
+
+    Args:
+        dates: List of ISO dates, or a single one as a string.
+
+    Returns:
+        Sorted list of ISO dates. Empty for an empty string or list.
+    """
+    if isinstance(dates, str):
+        return [dates] if dates else []
+    return sorted(dates)
 
 
 def is_date(text):
@@ -136,7 +154,7 @@ class Entry:
 
     def __init__(self, service, id="", title="", company="", location="",
                  published="", url="", saved="", contact="", applied="",
-                 invited="", interview="", decided="", decision="",
+                 invited="", interview=(), decided="", decision="",
                  priority=None, attended=False, extra=None):
         """Create an entry.
 
@@ -154,7 +172,8 @@ class Entry:
             contact: Optional contact person, e.g. of a recruiter.
             applied: ISO date of the first action (applying, contacting).
             invited: ISO date of the follow-up.
-            interview: ISO date of the conversation.
+            interview: ISO dates of the conversations, as a list. A single
+                date as a string is accepted, as older entries store one.
             decided: ISO date of the outcome.
             decision: What the outcome was, one of DECISIONS.
             priority: Optional priority level, one of PRIORITIES.
@@ -174,7 +193,7 @@ class Entry:
         self.contact = contact
         self.applied = applied
         self.invited = invited
-        self.interview = interview
+        self.interview = date_list(interview)
         self.decided = decided
         self.decision = decision
         self.priority = priority
@@ -230,6 +249,11 @@ class Entry:
         dates and the decision are cleared, and earlier dates are kept. The
         status "to apply" clears the whole timeline.
 
+        A field that holds several dates keeps the ones it has and takes the
+        new one alongside them, so setting the status to "interview" again
+        with another date records a second conversation rather than moving
+        the first.
+
         Args:
             status: New status, one of STATUSES.
             date: ISO date (YYYY-MM-DD) the status was reached on. Defaults
@@ -239,9 +263,13 @@ class Entry:
         position = TIMELINE_FIELDS.index(field) \
             if field in TIMELINE_FIELDS else -1
         if position >= 0:
-            setattr(self, field, date or datetime.date.today().isoformat())
+            date = date or datetime.date.today().isoformat()
+            if field in MULTI_FIELDS:
+                date = sorted(set(getattr(self, field)) | {date})
+            setattr(self, field, date)
         for later_field in TIMELINE_FIELDS[position + 1:]:
-            setattr(self, later_field, "")
+            setattr(self, later_field,
+                    [] if later_field in MULTI_FIELDS else "")
         self.decision = status if status in DECISIONS else ""
 
     def set_priority(self, priority):
@@ -297,6 +325,31 @@ class Entry:
             f"\\url{{{self.url}}}",
         ]
 
+    def timeline_lines(self):
+        """Build the recorded timeline as labelled dates.
+
+        A field holding several dates contributes one line per date. Those
+        lines are numbered, so that a second conversation is told apart from
+        the first; a lone date is not numbered, as there is nothing to tell
+        it apart from.
+
+        Returns:
+            List of (field, label, date) triples in timeline order, leaving
+            out the fields no date was recorded in.
+        """
+        lines = []
+        for field in TIMELINE_FIELDS:
+            label = self.timeline_labels[field]
+            if field not in MULTI_FIELDS:
+                if getattr(self, field):
+                    lines.append((field, label, getattr(self, field)))
+                continue
+            dates = getattr(self, field)
+            lines.extend(
+                (field, f"{label} {number}" if len(dates) > 1 else label, date)
+                for number, date in enumerate(dates, start=1))
+        return lines
+
     def latex_timeline_cell(self):
         """Build the table cell with the timeline of the entry.
 
@@ -305,11 +358,7 @@ class Entry:
             labelled in the wording of this kind of entry.
         """
         lines = []
-        for field in TIMELINE_FIELDS:
-            date = getattr(self, field)
-            if not date:
-                continue
-            label = self.timeline_labels[field]
+        for field, label, date in self.timeline_lines():
             if field == "decided" and self.decision:
                 label = self.decision_labels[self.decision]
             lines.append(f"{label}: {format_date(date)}")
