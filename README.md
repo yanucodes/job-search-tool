@@ -90,8 +90,10 @@ PDF*, so both are always one click away.
   included, with an end date only those on or before it. Both are optional
   — leaving them empty summarizes everything you acted on. The period is
   printed under the title as `Zeitraum`, so the summary says what it
-  covers: `01.08.2026 -- 31.08.2026` with both bounds, `ab 01.08.2026` or
-  `bis 31.08.2026` with one, and no such line at all with neither.
+  covers, and always as a range between two dates: a bound you left open is
+  filled in with the date the summary reaches to anyway — the oldest entry
+  in it at the start, today at the end. Generating without either date
+  therefore reads `Zeitraum: 04.03.2026 -- 31.08.2026`.
 
 ## Kinds of entry
 
