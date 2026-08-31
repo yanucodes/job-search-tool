@@ -376,11 +376,14 @@ class Entry:
         A field holding several dates contributes one line per date. Those
         lines are numbered, so that a second conversation is told apart from
         the first; a lone date is not numbered, as there is nothing to tell
-        it apart from.
+        it apart from. The numbers go by date, as does the order of the
+        lines: a timeline is read as the course of events, which the order
+        of the fields only matches where the stages follow one another.
 
         Returns:
-            List of (field, label, date) triples in timeline order, leaving
-            out the fields no date was recorded in.
+            List of (field, label, date) triples in date order, leaving out
+            the fields no date was recorded in. Stages sharing a date keep
+            the order of the timeline.
         """
         lines = []
         for field in TIMELINE_FIELDS:
@@ -393,7 +396,7 @@ class Entry:
             lines.extend(
                 (field, f"{label} {number}" if len(dates) > 1 else label, date)
                 for number, date in enumerate(dates, start=1))
-        return lines
+        return sorted(lines, key=lambda line: line[2])
 
     def latex_timeline_cell(self):
         """Build the table cell with the timeline of the entry.
