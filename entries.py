@@ -25,7 +25,8 @@ KNOWN_FIELDS = ({"service", "saved", "contact", "decision", "priority",
 REQUIRED_FIELDS = ["title", "company", "location", "url"]
 FIELD_TYPES = {"title": "text", "company": "text", "location": "text",
                "url": "url", "contact": "text", "published": "date",
-               "saved": "date", "applied": "date", "attended": "checkbox"}
+               "saved": "date", "applied": "date", "invited": "date",
+               "attended": "checkbox"}
 LATEX_SPECIAL_CHARS = {
     "\\": r"\textbackslash{}",
     "&": r"\&",
@@ -473,10 +474,15 @@ class RecruiterContact(Entry):
 class FairVisit(Entry):
     """A job fair or career event, planned and then possibly attended.
 
-    A fair has a single date -- the day it takes place -- which is known
-    long before there is anything to report. Whether it was attended is
-    therefore tracked on its own, and only an attended fair is an
-    Eigenbemühung that belongs in the summary.
+    Attending a fair is two documented steps, each with its own date:
+    signing up for it, and being there on the day. The day it takes place
+    is known long before either, so an entry can be kept for a fair that is
+    still ahead; only a fair actually attended is an Eigenbemühung that
+    belongs in the summary.
+
+    Attributes:
+        planned_label: What the day of the fair is called while the visit
+            is still ahead, in place of its timeline label.
     """
 
     kind = "fair"
@@ -484,51 +490,84 @@ class FairVisit(Entry):
     group = "Job fairs"
     page = "fairs"
     form_fields = ["title", "company", "location", "url", "applied",
-                   "contact", "attended"]
+                   "invited", "contact", "attended"]
     field_labels = {"title": "Event", "company": "Organiser",
                     "location": "Venue", "url": "Event website",
                     "applied": "Date of the fair",
+                    "invited": "Registered on",
                     "contact": "Who you spoke to", "attended": "Attended"}
     field_hints = {"title": "e.g. heise jobs IT-Tag Stuttgart",
+                   "invited": "when you signed up; leave empty for a fair"
+                              " that took no registration",
                    "contact": "the people or companies you talked to at the"
                               " stands; fill in after the visit",
                    "attended": "tick only once you have actually been there"
                                " -- a fair enters the PDF summary at that"
                                " point, not before"}
-    statuses = ["planned", "attended"]
-    status_dated = False
+    statuses = ["planned", "registered", "attended"]
     section = "Jobmessen"
     columns = ("Veranstaltung", "Verlauf")
     timeline_labels = {
         "applied": "Besucht am",
-        "invited": "Kontakte geknüpft",
+        "invited": "Angemeldet am",
         "interview": "Folgegespräch",
         "decided": "Abschluss",
     }
+    planned_label = "Findet statt am"  # what that date is until it is gone to
     decision_labels = {"offer": "Zusage", "rejected": "Absage"}
 
     @property
     def status(self):
-        """Whether the fair is still ahead or was attended."""
-        return "attended" if self.attended else "planned"
+        """How far the fair got: planned, registered for, or attended."""
+        if self.attended:
+            return "attended"
+        return "registered" if self.invited else "planned"
 
     @property
     def reportable(self):
         """Only a fair actually attended is reported, and only with a date."""
         return bool(self.applied) and self.attended
 
-    def set_status(self, status, date=""):
-        """Record whether the fair was attended.
+    def timeline_lines(self):
+        """Call the day of the fair what it is until the fair was attended.
 
-        The date stays as it is: it is the day the fair takes place, which
-        does not change by going or not going, so a date passed in here is
-        ignored.
+        The date the entry carries is the day the fair takes place, which
+        is known while the visit is still ahead; it is a day visited on
+        only once the fair was attended. Only attended fairs are reported,
+        so the summary never sees the other wording.
+
+        Returns:
+            List of (field, label, date) triples, as for any entry.
+        """
+        lines = []
+        for field, label, date in super().timeline_lines():
+            if field == "applied" and not self.attended:
+                label = self.planned_label
+            lines.append((field, label, date))
+        return lines
+
+    def set_status(self, status, date=""):
+        """Record how far the fair got.
+
+        Registering is dated on its own. Attending is dated by the day the
+        fair took place, which is the date the entry already carries, so
+        confirming attendance sets that date rather than a second one.
+        Falling back to a step not yet taken forgets the ones after it, the
+        day of the fair excepted: that one stands whether it is gone to or
+        not.
 
         Args:
             status: One of the statuses of this kind.
-            date: Unused, see above.
+            date: ISO date (YYYY-MM-DD) of the step. Defaults to today.
         """
+        date = date or datetime.date.today().isoformat()
         self.attended = status == "attended"
+        if status == "attended":
+            self.applied = date
+        elif status == "registered":
+            self.invited = date
+        else:
+            self.invited = ""
 
 
 class NetworkEffort(Entry):

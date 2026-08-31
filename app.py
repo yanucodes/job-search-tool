@@ -211,7 +211,7 @@ def new_application():
     kind of Eigenbemühung being recorded: the "kind" query argument chooses
     it on GET, a hidden field carries it on POST. POST validates that the
     fields the PDF summary needs (title, company, location, url) are filled,
-    then saves the entry. An optional past date in the timeline field records
+    then saves the entry. An optional past date in a timeline field records
     an effort already made; when omitted a job application starts in the
     "to apply" group.
     """
@@ -222,6 +222,7 @@ def new_application():
                   for key in entries.REQUIRED_FIELDS}
         published = request.form.get("published", "").strip()
         applied = request.form.get("applied", "").strip()
+        invited = request.form.get("invited", "").strip()
         contact = request.form.get("contact", "").strip()
         saved = request.form.get("saved", "").strip()
         attended = bool(request.form.get("attended"))
@@ -232,7 +233,7 @@ def new_application():
             record = {"id": uuid.uuid4().hex, "published": published, **fields}
             tracker.add_application("manual", record, priority, applied,
                                     entry_class.kind, contact, saved,
-                                    attended)
+                                    attended, invited)
             return redirect(entry_page(entry_class))
         missing = ", ".join(entry_class.field_labels[key]
                             for key in entries.REQUIRED_FIELDS
