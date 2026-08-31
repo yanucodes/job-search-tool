@@ -131,19 +131,23 @@ than the furthest one reached, and the way to undo a mistake is *not
 contacted yet*, which clears the whole timeline.
 
 Only entries the effort was actually made on reach the PDF summary, and each
-kind decides what that means. That makes the list usable for planning as
-well as for reporting: a job fair carries the day it takes place, known long
-in advance, so one you intend to visit shows up under *Job fairs* to keep
-track of but stays out of the summary until you have been there — an
-*Attended* box on the form, or the status dropdown afterwards.
+kind decides what that means, as well as which day it counts as made on.
+That makes the list usable for planning as well as for reporting: a job fair
+you merely intend to visit shows up under *Job fairs* to keep track of but
+stays out of the summary until you do something about it.
 
 Going to a fair is two documented steps, and the summary reports both:
 `Angemeldet am` when you signed up and `Besucht am` the day you were there.
 Set the status to *registered* with the date you signed up on, and to
 *attended* with the day of the fair, which is what that second date is.
-Until then the same date is labelled `Findet statt am` in the entry's
-details, a day still ahead rather than one visited. A fair that took no
-registration simply has the one line.
+Signing up is an effort in itself, so a fair enters the summary from the day
+you registered, counted on that day and listing the day it takes place as
+`Findet statt am` until you have been. A fair that took no registration is
+reported once visited, and has the one line.
+
+A fair whose day has not come yet cannot have been visited, so ticking
+*Attended* ahead of time claims nothing: the entry reads as registered and
+turns into a visit on the day itself.
 
 The web interface is in English and the PDF summary in German, because the
 summary is what the Arbeitsagentur is handed. The timeline in an entry's
