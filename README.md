@@ -141,7 +141,8 @@ happens when it happens.
 The web interface is in English and the PDF summary in German, because the
 summary is what the Arbeitsagentur is handed. The timeline in an entry's
 details is shown in German too, so what you see there is what will be
-reported.
+reported. Both list it in date order, so it reads as the course of events
+even where the stages did not follow one another.
 
 To add a kind, subclass `Entry`, override its class attributes — the labels,
 the path of its page, which fields the form offers and what they are called
