@@ -244,6 +244,40 @@ class Entry:
         """
         return self.applied
 
+    @property
+    def report_dates(self):
+        """The days something happened on this entry.
+
+        Every recorded stage is a documented step of its own, not only the
+        first one: an application sent in one month may be answered and
+        talked about in the next.
+
+        Returns:
+            List of ISO dates in date order, one per recorded timeline
+            date. Empty while nothing is recorded.
+        """
+        return [date for _, _, date in self.timeline_lines()]
+
+    def changed_between(self, start, end):
+        """Whether anything happened on this entry within a period.
+
+        A summary reports a period of the job search rather than a set of
+        entries, so an entry belongs in it whenever one of its steps falls
+        inside it -- the entry then appears with its whole timeline, which
+        is what places that step in its course.
+
+        Args:
+            start: Optional ISO date (YYYY-MM-DD) of the lower bound. An
+                empty string leaves the period open at that end.
+            end: Optional ISO date (YYYY-MM-DD) of the upper bound, again
+                open when empty. Both bounds are inclusive.
+
+        Returns:
+            True if at least one recorded date lies within the period.
+        """
+        return any((not start or date >= start) and (not end or date <= end)
+                   for date in self.report_dates)
+
     def last_stage(self):
         """Return the timeline field that was acted on most recently.
 
@@ -589,6 +623,21 @@ class FairVisit(Entry):
             ISO date (YYYY-MM-DD).
         """
         return self.applied if self.visited else self.invited
+
+    @property
+    def report_dates(self):
+        """The days this fair counts as documented on.
+
+        The day it takes place is known before the visit, but it is a step
+        taken only once the fair has been gone to: a fair still ahead must
+        not be counted in a period that has not reached it.
+
+        Returns:
+            List of ISO dates in date order, leaving out the day of the
+            fair while the visit is still ahead.
+        """
+        return [date for field, _, date in self.timeline_lines()
+                if field != "applied" or self.visited]
 
     def timeline_lines(self):
         """Call the day of the fair what it is until the fair was attended.

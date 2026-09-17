@@ -136,27 +136,30 @@ def format_period(start, end, oldest):
 def write_latex_table(applications, start="", end=""):
     """Write the entries acted on as a LaTeX summary to the output directory.
 
-    Only entries the effort was actually made on are included, and each is
-    placed on the day it was made -- what both mean is up to the kind, so a
-    job fair counts from the day it was signed up for. Each
-    kind gets its own section, numbered from one, so that the applications
-    stay countable next to the other efforts. Within a section, each row
-    shows what the entry was about next to its timeline. The period the
-    bounds below stand for is named under the title, so that a summary says
-    what it covers; the entries being sorted, the oldest of them is the one
-    an open lower bound reaches back to.
+    Only entries the effort was actually made on are included, and an entry
+    belongs in a period whenever one of its steps falls inside it: an
+    application sent in August and interviewed for in September is part of
+    both months, each time with its whole timeline. What counts as a step is
+    up to the kind, so the day of a job fair counts only once it has been
+    gone to. Each kind gets its own section, numbered from one, so that the
+    applications stay countable next to the other efforts. Within a section,
+    each row shows what the entry was about next to its timeline, the
+    entries ordered by the day the effort started. The period the bounds
+    below stand for is named under the title, so that a summary says what it
+    covers; the entries being sorted, the oldest of them is the one an open
+    lower bound reaches back to.
 
     Args:
         applications: List of Entry objects.
-        start: Optional ISO date (YYYY-MM-DD). When given, entries acted on
-            before it are left out; when empty, there is no lower bound.
-        end: Optional ISO date (YYYY-MM-DD). When given, entries acted on
-            after it are left out; when empty, there is no upper bound. Both
-            bounds are inclusive.
+        start: Optional ISO date (YYYY-MM-DD). When given, entries nothing
+            happened on since then are left out; when empty, there is no
+            lower bound.
+        end: Optional ISO date (YYYY-MM-DD). When given, entries nothing
+            happened on until then are left out; when empty, there is no
+            upper bound. Both bounds are inclusive.
     """
-    acted_on = sorted((a for a in applications if a.reportable
-                       and (not start or a.effort_date >= start)
-                       and (not end or a.effort_date <= end)),
+    acted_on = sorted((a for a in applications
+                       if a.reportable and a.changed_between(start, end)),
                       key=lambda a: a.effort_date)
     sections = []
     for entry_class in entries.KINDS:

@@ -321,8 +321,10 @@ def applications_pdf():
     """Generate a PDF summary of the application list and return it.
 
     The optional "start" and "end" query arguments hold ISO dates limiting
-    the summary to the jobs applied to within that range. Each bound is
-    inclusive; a bound that is left empty is not applied.
+    the summary to the entries something happened on within that range --
+    an application sent earlier counts too when it was answered or talked
+    about in it. Each bound is inclusive; a bound that is left empty is not
+    applied.
     """
     start = request.args.get("start", "").strip()
     end = request.args.get("end", "").strip()
