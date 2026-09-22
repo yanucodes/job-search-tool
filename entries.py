@@ -20,8 +20,8 @@ STATUSES = ["to apply", "applied", "invited", "interview"] + DECISIONS
 PRIORITIES = [1, 2, 3]
 PRIORITY_LABELS = {1: "high", 2: "moderate", 3: "low"}
 RECORD_FIELDS = ["id", "title", "company", "location", "published", "url"]
-KNOWN_FIELDS = ({"service", "saved", "contact", "decision", "priority",
-                 "attended"} | set(TIMELINE_FIELDS) | set(RECORD_FIELDS))
+KNOWN_FIELDS = ({"saved", "contact", "decision", "priority", "attended"}
+                | set(TIMELINE_FIELDS) | set(RECORD_FIELDS))
 REQUIRED_FIELDS = ["title", "company", "location", "url"]
 FIELD_TYPES = {"title": "text", "company": "text", "location": "text",
                "url": "url", "contact": "text", "published": "date",
@@ -159,17 +159,14 @@ class Entry:
     }
     decision_labels = {"offer": "Zusage", "rejected": "Absage"}
 
-    def __init__(self, service, id="", title="", company="", location="",
+    def __init__(self, id="", title="", company="", location="",
                  published="", url="", saved="", contact="", applied="",
                  invited="", interview=(), decided="", decision="",
                  priority=None, attended=False, extra=None):
         """Create an entry.
 
         Args:
-            service: Name of the job board the entry came from, or "manual"
-                for entries added by hand.
-            id: Identifier of the job on that board. Must be stable, it is
-                what the seen-job tracking is keyed on.
+            id: Identifier of the entry.
             title: Job title, or what the effort was for other kinds.
             company: Employer, or the agency or organiser for other kinds.
             location: Place of the job, agency or event.
@@ -186,10 +183,9 @@ class Entry:
             priority: Optional priority level, one of PRIORITIES.
             attended: Whether an event was actually attended. Only kinds
                 that stand for an event use it.
-            extra: Optional dictionary of further keys to keep, for values a
-                job board records that this class does not know about.
+            extra: Optional dictionary of further keys to keep, for values
+                in the tracker file that this class does not know about.
         """
-        self.service = service
         self.id = id
         self.title = title
         self.company = company
@@ -394,8 +390,7 @@ class Entry:
         Returns:
             Dictionary of the entry, ready to be serialized as JSON.
         """
-        data = {"kind": self.kind, "service": self.service,
-                "saved": self.saved}
+        data = {"kind": self.kind, "saved": self.saved}
         data.update({field: getattr(self, field)
                      for field in TIMELINE_FIELDS})
         data["decision"] = self.decision
@@ -555,7 +550,7 @@ class FairVisit(Entry):
                     "applied": "Date of the fair",
                     "invited": "Registered on",
                     "contact": "Who you spoke to", "attended": "Attended"}
-    field_hints = {"title": "e.g. heise jobs IT-Tag Stuttgart",
+    field_hints = {"title": "e.g. IT-Jobmesse Musterstadt",
                    "invited": "when you signed up; leave empty for a fair"
                               " that took no registration",
                    "contact": "the people or companies you talked to at the"
@@ -731,5 +726,4 @@ def from_dict(data):
     entry_class = REGISTRY.get(fields.pop("kind", ""), Entry)
     extra = {key: fields.pop(key)
              for key in list(fields) if key not in KNOWN_FIELDS}
-    fields.setdefault("service", "manual")
     return entry_class(extra=extra, **fields)

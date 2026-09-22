@@ -150,14 +150,11 @@ def write_latex_table(applications, start="", end=""):
         f.write(document)
 
 
-def add_application(service, record, priority=None, applied="", kind="job",
+def add_application(record, priority=None, applied="", kind="job",
                     contact="", saved="", attended=False, invited=""):
     """Add an entry to the application list with an empty timeline.
 
     Args:
-        service: Where the entry came from: "manual" for entries added by
-            hand, the name of a job board for those saved by the search of
-            earlier versions.
         record: Dictionary with the entry's id, title, company, location,
             published date and url.
         priority: Optional priority level (one of entries.PRIORITIES). When
@@ -182,7 +179,7 @@ def add_application(service, record, priority=None, applied="", kind="job",
     extra = {key: value for key, value in record.items()
              if key not in entries.RECORD_FIELDS}
     applications.append(entry_class(
-        service=service, applied=applied, invited=invited, contact=contact,
+        applied=applied, invited=invited, contact=contact,
         saved=saved, attended=attended,
         priority=priority if priority in entries.PRIORITIES else None,
         extra=extra, **known))

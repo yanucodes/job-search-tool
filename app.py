@@ -164,7 +164,7 @@ def new_application():
             else None
         if all(fields.values()):
             record = {"id": uuid.uuid4().hex, "published": published, **fields}
-            tracker.add_application("manual", record, priority, applied,
+            tracker.add_application(record, priority, applied,
                                     entry_class.kind, contact, saved,
                                     attended, invited)
             return redirect(entry_page(entry_class))

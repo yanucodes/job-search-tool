@@ -1,7 +1,6 @@
 [
   {
     "kind": "job",
-    "service": "mock",
     "saved": "2026-06-12",
     "applied": "",
     "invited": "",
@@ -17,7 +16,6 @@
   },
   {
     "kind": "job",
-    "service": "mock",
     "saved": "2026-06-12",
     "applied": "",
     "invited": "",
@@ -33,7 +31,6 @@
   },
   {
     "kind": "job",
-    "service": "mock",
     "saved": "2026-06-05",
     "applied": "2026-06-06",
     "invited": "",
@@ -49,7 +46,6 @@
   },
   {
     "kind": "job",
-    "service": "mock",
     "saved": "2026-05-28",
     "applied": "2026-05-29",
     "invited": "2026-06-03",
@@ -65,7 +61,6 @@
   },
   {
     "kind": "job",
-    "service": "mock",
     "saved": "2026-05-20",
     "applied": "2026-05-21",
     "invited": "2026-05-26",
