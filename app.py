@@ -1,4 +1,4 @@
-"""Web interface for job search."""
+"""Web interface for the application tracker."""
 
 import datetime
 import os
@@ -8,8 +8,8 @@ import uuid
 from flask import Flask, redirect, render_template, request, send_file, \
     url_for
 
+import config
 import entries
-import search
 import tracker
 
 app = Flask(__name__)
@@ -19,26 +19,6 @@ APPLICATIONS_PDF = "applications.pdf"
 # page. Taken from the registry, so a new kind brings its page with it.
 KIND_PAGES = {entry_class.page: entry_class
               for entry_class in entries.KINDS[1:]}
-
-pending_jobs = None  # jobs found by the last search, None before the first
-
-
-def get_pending_jobs(refresh=False):
-    """Return new jobs to review, searching the job boards when needed.
-
-    The result is cached in memory, so reloading the review page does not
-    query the job boards again.
-
-    Args:
-        refresh: If True, run the search again even if results are cached.
-
-    Returns:
-        List of (service, record) tuples for unseen jobs.
-    """
-    global pending_jobs
-    if pending_jobs is None or refresh:
-        pending_jobs = search.find_new_jobs(tracker.load_seen())
-    return pending_jobs
 
 
 @app.context_processor
@@ -73,53 +53,6 @@ def entry_page(entry):
     if entry.page in KIND_PAGES:
         return url_for("entry_list", page=entry.page)
     return url_for("applications")
-
-
-@app.route("/review")
-def review():
-    """Show the next new job with its description for review."""
-    jobs = get_pending_jobs()
-    if not jobs:
-        return render_template("review.html", job=None)
-    service, record = jobs[0]
-    description = search.SERVICES[service].description(record)
-    return render_template("review.html", service=service, job=record,
-                           description=description, total=len(jobs),
-                           priorities=entries.PRIORITIES,
-                           priority_labels=entries.PRIORITY_LABELS)
-
-
-@app.route("/review/search", methods=["POST"])
-def refresh_jobs():
-    """Search the job boards again and show the review page."""
-    get_pending_jobs(refresh=True)
-    return redirect(url_for("review"))
-
-
-@app.route("/review/<any(save, seen):action>", methods=["POST"])
-def resolve_job(action):
-    """Mark the submitted job as seen and optionally save it.
-
-    With the "save" action the job is also added to the application list.
-    The job is removed from the pending jobs, so the review page moves on
-    to the next one.
-
-    Args:
-        action: Either "save" or "seen".
-    """
-    service = request.form["service"]
-    job_id = request.form["job_id"]
-    raw = request.form.get("priority", "")
-    priority = int(raw) if raw.isdigit() and int(raw) in entries.PRIORITIES \
-        else None
-    for entry in get_pending_jobs():
-        if entry[0] == service and entry[1]["id"] == job_id:
-            tracker.mark_seen(service, job_id)
-            if action == "save":
-                tracker.add_application(service, entry[1], priority)
-            pending_jobs.remove(entry)
-            break
-    return redirect(url_for("review"))
 
 
 @app.route("/")
@@ -302,9 +235,6 @@ def update_priority(index):
 def delete_application(index):
     """Remove a saved entry from the list.
 
-    A job stays in the seen list, so it will not reappear in future
-    searches.
-
     Args:
         index: Index of the entry in the saved list.
     """
@@ -329,7 +259,7 @@ def applications_pdf():
     start = request.args.get("start", "").strip()
     end = request.args.get("end", "").strip()
     tracker.write_latex_table(tracker.load_applications(), start, end)
-    output_dir = search.get_output_dir()
+    output_dir = config.get_output_dir()
     result = subprocess.run(
         ["pdflatex", "-interaction=nonstopmode", tracker.APPLICATIONS_TABLE],
         cwd=output_dir, capture_output=True, text=True, errors="replace")

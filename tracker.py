@@ -1,18 +1,17 @@
-"""Track seen jobs and the entries of the application list.
+"""Track the entries of the application list.
 
 The entries themselves -- job applications and the other Eigenbemühungen --
 live in entries.py; this module only stores them and lays them out as a
-LaTeX summary. All files live in the output directory configured in search.py.
+LaTeX summary. All files live in the output directory configured in config.py.
 """
 
 import datetime
 import json
 import os
 
+import config
 import entries
-import search
 
-SEEN_FILE = "seen.json"
 APPLICATIONS_FILE = "applications.json"
 APPLICATIONS_TABLE = "applications.tex"
 DOC_HEADER = r"""\documentclass{article}
@@ -51,35 +50,9 @@ def output_path(filename):
     Returns:
         Filesystem path as a string.
     """
-    output_dir = search.get_output_dir()
+    output_dir = config.get_output_dir()
     os.makedirs(output_dir, exist_ok=True)
     return os.path.join(output_dir, filename)
-
-
-def load_seen():
-    """Load the set of jobs the user has already seen.
-
-    Returns:
-        Set of (service, job_id) tuples. Empty if nothing was seen yet.
-    """
-    path = output_path(SEEN_FILE)
-    if not os.path.exists(path):
-        return set()
-    with open(path, "r", encoding="utf-8") as f:
-        return {(service, job_id) for service, job_id in json.load(f)}
-
-
-def mark_seen(service, job_id):
-    """Record that the user has seen a job.
-
-    Args:
-        service: Name of the job board the job came from.
-        job_id: Identifier of the job on that board.
-    """
-    seen = load_seen()
-    seen.add((service, job_id))
-    with open(output_path(SEEN_FILE), "w", encoding="utf-8") as f:
-        json.dump(sorted(seen), f, indent=2, ensure_ascii=False)
 
 
 def load_applications():
@@ -182,8 +155,11 @@ def add_application(service, record, priority=None, applied="", kind="job",
     """Add an entry to the application list with an empty timeline.
 
     Args:
-        service: Name of the job board the job came from, or "manual".
-        record: Normalized job record as returned by the board's normalize().
+        service: Where the entry came from: "manual" for entries added by
+            hand, the name of a job board for those saved by the search of
+            earlier versions.
+        record: Dictionary with the entry's id, title, company, location,
+            published date and url.
         priority: Optional priority level (one of entries.PRIORITIES). When
             given, it is stored on the entry; when omitted the entry has no
             chosen priority.
@@ -230,16 +206,10 @@ def update_status(index, status, date=""):
 def delete_application(index):
     """Remove a saved entry from the application list.
 
-    The job is kept in the seen list (re-asserted here in case the entry
-    predates seen tracking or the seen file was cleared), so it will not
-    reappear in future searches.
-
     Args:
         index: Index of the entry in the saved list.
     """
     applications = load_applications()
-    entry = applications[index]
-    mark_seen(entry.service, entry.id)
     applications.pop(index)
     save_applications(applications)
 
