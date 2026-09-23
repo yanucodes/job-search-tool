@@ -10,7 +10,7 @@
     "id": "DEMO-001",
     "title": "Python Backend Developer (m/w/d)",
     "company": "Beispiel Tech GmbH",
-    "location": "Heidelberg (hybrid)",
+    "location": "Musterstadt (hybrid)",
     "published": "2026-06-12",
     "url": "https://example.com/demo/jobs/python-backend"
   },
@@ -40,7 +40,7 @@
     "id": "DEMO-002",
     "title": "Backend Engineer – Medical Imaging",
     "company": "Muster Medical Systems AG",
-    "location": "Mannheim",
+    "location": "Beispielstadt",
     "published": "2026-06-11",
     "url": "https://example.com/demo/jobs/medical-imaging"
   },
@@ -55,7 +55,7 @@
     "id": "DEMO-005",
     "title": "Software Engineer – Scientific Computing",
     "company": "Nebula Beispiel GmbH",
-    "location": "Heidelberg",
+    "location": "Musterstadt",
     "published": "2026-06-08",
     "url": "https://example.com/demo/jobs/scientific-computing"
   },
@@ -70,7 +70,7 @@
     "id": "DEMO-004",
     "title": "Data Engineer (Python)",
     "company": "Orbit Beispiel Labs",
-    "location": "Karlsruhe",
+    "location": "Musterhausen",
     "published": "2026-06-09",
     "url": "https://example.com/demo/jobs/data-engineer"
   }

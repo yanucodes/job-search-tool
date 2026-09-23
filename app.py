@@ -1,5 +1,6 @@
 """Web interface for the application tracker."""
 
+import argparse
 import datetime
 import os
 import subprocess
@@ -15,6 +16,7 @@ import tracker
 app = Flask(__name__)
 
 APPLICATIONS_PDF = "applications.pdf"
+DEMO_PORT = 5055
 # The kinds listed away from the applications page, by the path of their
 # page. Taken from the registry, so a new kind brings its page with it.
 KIND_PAGES = {entry_class.page: entry_class
@@ -270,5 +272,25 @@ def applications_pdf():
                                                   APPLICATIONS_PDF)))
 
 
+def run_demo():
+    """Serve the demo entries on a port of their own.
+
+    The demo runs against the obviously fake entries in demo/results,
+    found next to this file rather than through the configuration, so it
+    never reads or writes the real tracker files whatever is configured.
+    Its own port keeps it beside an instance serving the real ones.
+    """
+    here = os.path.dirname(os.path.abspath(__file__))
+    config.OUTPUT_DIR = os.path.join(here, "demo", "results")
+    app.run(port=DEMO_PORT, debug=False, use_reloader=False)
+
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--demo", action="store_true",
+                        help="serve the demo entries on port {}".format(
+                            DEMO_PORT))
+    if parser.parse_args().demo:
+        run_demo()
+    else:
+        app.run(debug=True)
