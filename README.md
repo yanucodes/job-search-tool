@@ -1,12 +1,16 @@
 # job-search-tool
 
-A tool that searches job boards, shows each new posting with its
-description, and lets you save it to an application list or discard it.
-Jobs you have already reviewed are remembered by their job ID and are not
-shown again. Searches are configured with a command-line interface;
-reviewing jobs and managing applications happens in a small web interface.
-Currently supported job board:
-[arbeitsagentur.de](https://www.arbeitsagentur.de).
+A tool for documenting a job search: what you applied to, who you talked
+to, where you went, how far each of them got, and a PDF summary of all of
+it (in German, so it can be used as Nachweis der Eigenbemühungen for the
+Arbeitsagentur). Entries are added and worked through in a small web
+interface.
+
+> **Versions.** Up to [`v1.0.0`](../../releases/tag/v1.0.0) the tool also
+> searched job boards and offered each new posting for review. The
+> Arbeitsagentur API that search depended on has changed, and most job
+> boards offer no public API to build on, so from v2 the tool concentrates
+> on tracking. The last version with search stays available under that tag.
 
 ## Setup
 
@@ -18,14 +22,15 @@ pip install -r requirements.txt
 
 ## Configuration
 
-```sh
-python main.py
+The one setting is where the tool keeps its files. Without a
+`config.json` next to `app.py` everything lands in `results/`; to keep it
+elsewhere, put the directory in that file:
+
+```json
+{
+  "output_dir": "~/job-search-dir"
+}
 ```
-
-From the main menu you can:
-
-1. **Show search configurations** — add, update or remove saved searches.
-2. **Set output directory** — choose where results are stored.
 
 ## Web interface
 
@@ -35,19 +40,10 @@ python app.py
 
 Then open <http://127.0.0.1:5000>. Starting the app with `flask run`
 instead reads a local `.flaskenv` file, so a line like `FLASK_RUN_PORT=5002`
-there serves the app on that port. Search configurations are managed with
-the command-line interface; the web interface uses the same saved searches
-and output files. Every page carries the same two bars: the navigation
-between the pages below, and a toolbar with *Add manually* and *Generate
-PDF*, so both are always one click away.
+there serves the app on that port. Every page carries the same two bars:
+the navigation between the pages below, and a toolbar with *Add manually*
+and *Generate PDF*, so both are always one click away.
 
-- **Review new jobs** (`/review`) — searches all job boards once and shows
-  one new job at a time with its description. *Add to my list* saves the
-  job to the application list, *Mark as seen* discards it; either way the
-  next job appears. *Search again* re-runs the search. Before saving you
-  can optionally pick a priority (`high`, `moderate`, `low`) from the
-  dropdown next to *Add to my list*; leaving it on *no priority* saves the
-  job without one.
 - **My applications** (`/applications`) — lists the saved job applications
   with their status and priority, grouped by how far they got: still to
   apply for, already applied to, and turned down. Each entry shows its
@@ -63,9 +59,8 @@ PDF*, so both are always one click away.
   alongside the earlier ones, so a second and third round are all recorded.
   Falling back to an earlier status clears them again, together with the
   rest of the later timeline. You can also set or clear
-  the priority here, or remove the entry from the list with *Delete*; a
-  removed job stays in the seen list, so later searches will not offer it
-  again. Jobs still to apply for are ordered by priority
+  the priority here, or remove the entry from the list with *Delete*.
+  Jobs still to apply for are ordered by priority
   (highest first, unprioritised last); jobs already applied to by the date
   you applied (oldest first), turned-down jobs by the date of the decision.
 - **Recruiter contacts** (`/recruiters`), **Job fairs** (`/fairs`) and
@@ -74,9 +69,8 @@ PDF*, so both are always one click away.
   rather than worked through, so each page is a single list, newest first,
   with the count in its heading. The entries open, change status and delete
   exactly like the applications do.
-- **Add manually** (`/new`) — adds an entry to the list by hand,
-  for postings the review page never showed you. The *Kind of entry*
-  dropdown at the top chooses what sort of effort is being recorded (see
+- **Add manually** (`/new`) — adds an entry to the list. The *Kind of
+  entry* dropdown at the top chooses what sort of effort is being recorded (see
   below) and reloads the form with the fields and names of that kind, so a
   recruiter contact asks for the agency and who wrote to you rather than for
   a job title and a posting. Four fields are always required, whatever they
@@ -166,21 +160,22 @@ from that; nothing in `app.py` needs to know about it.
 ## Demo
 
 ```sh
-python demo/run_demo.py
+python app.py --demo
 ```
 
-Runs the web interface on <http://127.0.0.1:5055> against obviously fake
-postings served by `jobboards/mock.py`, with its own configuration and
-results directory under `demo/`. It never touches your real configuration,
-your saved results or any job board API, which makes it safe for
-screenshots. Start it from the `job-search-tool` directory.
+Runs the web interface on <http://127.0.0.1:5055> against the obviously
+fake entries in `demo/results`, so you can click through the pages and
+generate the summary without recording anything of your own first. The
+entries are found next to `app.py` rather than through the configuration,
+so your own files stay out of reach whatever is configured, and the demo's
+own port leaves an instance on the real ones running.
+`demo/results/applications.pdf` is the summary those entries produce, for
+a look at the output without running anything.
 
 ## Output directory
 
-All results live in the configured output directory:
+Everything the tool saves lives in the configured output directory:
 
-- `seen.json` — IDs of jobs you have already reviewed (for arbeitsagentur
-  this is the posting's `refnr`).
 - `applications.json` — the entries you saved, with saved date and the
   timeline of the process: the dates of the first action, the invitation,
   the conversation and the final decision, and what the decision was. The
@@ -196,27 +191,6 @@ All results live in the configured output directory:
   PDF overview.
 - `applications.pdf` — the compiled overview, next to the `.aux`, `.log`
   and `.out` files `pdflatex` leaves behind.
-
-## Adding another job board
-
-Create a module in `jobboards/` that provides four functions:
-
-- `get_config(config=None)` — interactively collect search parameters and
-  return them as a dictionary (or `None` if the user cancels).
-- `search(params)` — run the search and return a list of raw job
-  dictionaries (or `None` on failure).
-- `normalize(job)` — convert a raw job to the standard record: a dictionary
-  with `id`, `title`, `company`, `location`, `published` and `url` keys.
-  `id` must be stable, it is what the seen-job tracking is keyed on.
-- `description(record)` — return the description for a normalized record
-  as an HTML string safe to embed in a page (or `None` if unavailable).
-  This is the only function allowed to be slow; it is called once per job
-  shown to the user.
-
-Then register the module in `SERVICES` in `search.py`. See
-`jobboards/arbeitsagentur.py` for a reference implementation, or
-`jobboards/mock.py` for a minimal one that reads its postings from a local
-JSON file.
 
 ## Development and AI usage
 
