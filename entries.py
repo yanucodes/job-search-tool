@@ -289,6 +289,26 @@ class Entry:
         """
         return any(within(date, start, end) for date in self.report_dates)
 
+    def status_changed_between(self, start, end):
+        """Whether the status of this entry changed within a period.
+
+        Every recorded step is such a change. While none is recorded, the
+        entry has had its status since the day it was noted down, so that
+        day counts instead: a job saved last week is as current as one
+        applied to last week.
+
+        Args:
+            start: Optional ISO date (YYYY-MM-DD) of the lower bound. An
+                empty string leaves the period open at that end.
+            end: Optional ISO date (YYYY-MM-DD) of the upper bound, again
+                open when empty. Both bounds are inclusive.
+
+        Returns:
+            True if the status changed at least once within the period.
+        """
+        return any(within(date, start, end)
+                   for date in self.report_dates or [self.saved])
+
     def last_stage(self):
         """Return the timeline field that was acted on most recently.
 
