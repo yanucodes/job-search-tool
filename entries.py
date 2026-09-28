@@ -98,6 +98,22 @@ def format_date(date):
     return datetime.date.fromisoformat(date).strftime("%d.%m.%Y")
 
 
+def within(date, start, end):
+    """Check whether a date lies within a period.
+
+    Args:
+        date: ISO date (YYYY-MM-DD) to check.
+        start: Optional ISO date of the lower bound. An empty string leaves
+            the period open at that end.
+        end: Optional ISO date of the upper bound, again open when empty.
+            Both bounds are inclusive.
+
+    Returns:
+        True if the date is within the period.
+    """
+    return (not start or date >= start) and (not end or date <= end)
+
+
 class Entry:
     """One documented Eigenbemühung: by default, a job application.
 
@@ -271,8 +287,7 @@ class Entry:
         Returns:
             True if at least one recorded date lies within the period.
         """
-        return any((not start or date >= start) and (not end or date <= end)
-                   for date in self.report_dates)
+        return any(within(date, start, end) for date in self.report_dates)
 
     def last_stage(self):
         """Return the timeline field that was acted on most recently.
