@@ -70,7 +70,7 @@ and *Generate PDF*, so both are always one click away.
   same *from* and *to* fields as the PDF summary, each optional; *Last 2
   weeks* goes back to the default and *Show all* lifts the filter. The line
   next to it says how many applications are shown out of how many are
-  saved.
+  saved, and changing an entry keeps the filter you chose.
 - **Recruiter contacts** (`/recruiters`), **Job fairs** (`/fairs`) and
   **Networking** (`/networking`) — one page per other kind of entry (see
   below), reached from the same navigation bar. Those efforts are recorded

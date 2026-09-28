@@ -20,6 +20,8 @@ DEMO_PORT = 5055
 # How far back the applications page looks for a change of status until
 # another period is chosen.
 RECENT_WEEKS = 2
+# Query arguments holding the period the applications page is filtered by.
+FILTER_ARGS = ("start", "end")
 # The kinds listed away from the applications page, by the path of their
 # page. Taken from the registry, so a new kind brings its page with it.
 KIND_PAGES = {entry_class.page: entry_class
@@ -43,6 +45,20 @@ def toolbar():
               for page, entry_class in KIND_PAGES.items()]
     return {"nav_pages": pages,
             "has_entries": bool(tracker.load_applications())}
+
+
+def filter_args():
+    """Return the filter the current request carries, to pass it on.
+
+    The forms on a filtered page post to addresses of their own, so the
+    filter travels along with them and the page comes back filtered the
+    same way once the change is made.
+
+    Returns:
+        Dictionary of the filter's query arguments present in the request.
+    """
+    return {key: request.args[key] for key in FILTER_ARGS
+            if key in request.args}
 
 
 def activity_period():
@@ -71,11 +87,12 @@ def entry_page(entry):
             page belongs to the kind rather than to the entry.
 
     Returns:
-        URL of that entry's page, to return to once the change is made.
+        URL of that entry's page, to return to once the change is made,
+        filtered as it was when the form was posted.
     """
     if entry.page in KIND_PAGES:
         return url_for("entry_list", page=entry.page)
-    return url_for("applications")
+    return url_for("applications", **filter_args())
 
 
 @app.route("/")
@@ -110,6 +127,7 @@ def render_entry_list(heading, groups, empty, period=None, counts=None):
     return render_template("entry_list.html", heading=heading, groups=groups,
                            empty=empty, period=period, counts=counts,
                            recent_weeks=RECENT_WEEKS,
+                           filter_args=filter_args(),
                            priorities=entries.PRIORITIES,
                            priority_labels=entries.PRIORITY_LABELS,
                            default_kind=entries.Entry.kind,

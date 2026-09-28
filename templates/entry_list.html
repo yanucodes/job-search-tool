@@ -52,7 +52,7 @@
                 {% endfor %}
             </ul>
             <form method="POST" class="status-change"
-                  action="{{ url_for('update_status', index=index) }}">
+                  action="{{ url_for('update_status', index=index, **filter_args) }}">
                 <label for="status-{{ index }}">Status: </label>
                 <select id="status-{{ index }}" name="status">
                     {% for status in application.statuses %}
@@ -70,7 +70,7 @@
             </form>
             {% if application.kind == default_kind %}
             <form method="POST"
-                  action="{{ url_for('update_priority', index=index) }}">
+                  action="{{ url_for('update_priority', index=index, **filter_args) }}">
                 <label for="priority-{{ index }}">Priority: </label>
                 <select id="priority-{{ index }}" name="priority"
                         onchange="this.form.submit()">
@@ -85,7 +85,7 @@
             </form>
             {% endif %}
             <form method="POST"
-                  action="{{ url_for('delete_application', index=index) }}"
+                  action="{{ url_for('delete_application', index=index, **filter_args) }}"
                   onsubmit="return confirm('Remove this job from your applications?');">
                 <input type="submit" value="Delete">
             </form>
