@@ -176,9 +176,13 @@ fake entries in `demo/results`, so you can click through the pages and
 generate the summary without recording anything of your own first. The
 entries are found next to `app.py` rather than through the configuration,
 so your own files stay out of reach whatever is configured, and the demo's
-own port leaves an instance on the real ones running.
-`demo/results/applications.pdf` is the summary those entries produce, for
-a look at the output without running anything.
+own port leaves an instance on the real ones running. Each run serves a
+temporary copy of them with their dates moved to random days of the last
+two weeks, every timeline keeping its order, so the demo opens on a full
+applications page; what you change there is gone when the demo stops.
+`demo/results/applications.pdf` is the summary those entries produce with
+the dates they are saved with, for a look at the output without running
+anything.
 
 ## Output directory
 

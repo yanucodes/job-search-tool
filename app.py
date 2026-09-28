@@ -2,8 +2,11 @@
 
 import argparse
 import datetime
+import json
 import os
+import random
 import subprocess
+import tempfile
 import uuid
 
 from flask import Flask, redirect, render_template, request, send_file, \
@@ -330,17 +333,64 @@ def applications_pdf():
                                                   APPLICATIONS_PDF)))
 
 
+def recent_dates(record, days):
+    """Move the dates of a demo entry to random days of the recent past.
+
+    Fixed dates drift out of the period the applications page shows by
+    default, so each run of the demo gives its entries new ones. The steps
+    of the timeline keep their order, and the posting is published on or
+    before the day the entry was saved.
+
+    Args:
+        record: Entry as a dictionary from the tracker file. Changed in
+            place.
+        days: How many days back from today the new dates may lie.
+
+    Returns:
+        The same dictionary, with its dates moved.
+    """
+    today = datetime.date.today()
+    fields = ["saved"] + entries.TIMELINE_FIELDS
+    old = sorted({date for field in fields
+                  for date in entries.date_list(record.get(field, ""))})
+    days_ago = sorted(random.sample(range(days + 1), len(old)), reverse=True)
+    moved = {date: (today - datetime.timedelta(days=ago)).isoformat()
+             for date, ago in zip(old, days_ago)}
+    for field in fields:
+        value = record.get(field)
+        if isinstance(value, list):
+            record[field] = [moved[date] for date in value]
+        elif value:
+            record[field] = moved[value]
+    if record.get("published"):
+        saved_ago = (today - datetime.date.fromisoformat(record["saved"])).days
+        record["published"] = (today - datetime.timedelta(
+            days=random.randint(saved_ago, days))).isoformat()
+    return record
+
+
 def run_demo():
     """Serve the demo entries on a port of their own.
 
     The demo runs against the obviously fake entries in demo/results,
     found next to this file rather than through the configuration, so it
     never reads or writes the real tracker files whatever is configured.
-    Its own port keeps it beside an instance serving the real ones.
+    They are served from a temporary copy with their dates moved into the
+    period the applications page shows by default, so the demo opens on a
+    full page and leaves the entries in the repository as they are. Its own
+    port keeps it beside an instance serving the real ones.
     """
     here = os.path.dirname(os.path.abspath(__file__))
-    config.OUTPUT_DIR = os.path.join(here, "demo", "results")
-    app.run(port=DEMO_PORT, debug=False, use_reloader=False)
+    source = os.path.join(here, "demo", "results", tracker.APPLICATIONS_FILE)
+    with open(source, "r", encoding="utf-8") as f:
+        records = [recent_dates(record, RECENT_WEEKS * 7)
+                   for record in json.load(f)]
+    with tempfile.TemporaryDirectory() as output_dir:
+        config.OUTPUT_DIR = output_dir
+        with open(os.path.join(output_dir, tracker.APPLICATIONS_FILE), "w",
+                  encoding="utf-8") as f:
+            json.dump(records, f, indent=2, ensure_ascii=False)
+        app.run(port=DEMO_PORT, debug=False, use_reloader=False)
 
 
 if __name__ == "__main__":
