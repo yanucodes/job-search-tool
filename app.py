@@ -17,6 +17,9 @@ app = Flask(__name__)
 
 APPLICATIONS_PDF = "applications.pdf"
 DEMO_PORT = 5055
+# How far back the applications page looks for a change of status until
+# another period is chosen.
+RECENT_WEEKS = 2
 # The kinds listed away from the applications page, by the path of their
 # page. Taken from the registry, so a new kind brings its page with it.
 KIND_PAGES = {entry_class.page: entry_class
@@ -42,6 +45,24 @@ def toolbar():
             "has_entries": bool(tracker.load_applications())}
 
 
+def activity_period():
+    """Return the period the applications page is filtered by.
+
+    Without a chosen period the page shows the last few weeks. An argument
+    that is present but empty leaves the period open at that end, which is
+    how everything is shown; one that is not a date is treated alike.
+
+    Returns:
+        The period as a (start, end) pair of ISO dates, either of which may
+        be "" for an open end.
+    """
+    recent = datetime.date.today() - datetime.timedelta(weeks=RECENT_WEEKS)
+    start = request.args.get("start", recent.isoformat()).strip()
+    end = request.args.get("end", "").strip()
+    return (start if entries.is_date(start) else "",
+            end if entries.is_date(end) else "")
+
+
 def entry_page(entry):
     """Return the address of the list page an entry is shown on.
 
@@ -63,7 +84,7 @@ def index():
     return redirect(url_for("applications"))
 
 
-def render_entry_list(heading, groups, empty):
+def render_entry_list(heading, groups, empty, period=None, counts=None):
     """Render a page listing saved entries.
 
     Each entry is paired with its index in the saved list, which the status
@@ -77,12 +98,18 @@ def render_entry_list(heading, groups, empty):
             that is one list rather than several.
         empty: What to say when the page has nothing to list, or "" when it
             has something.
+        period: Optional (start, end) pair of ISO dates the page is filtered
+            by. When given, the page offers the filter form; when omitted,
+            the page is not filtered.
+        counts: Optional (shown, total) pair, how many entries the filter
+            let through out of how many there are.
 
     Returns:
         The rendered page.
     """
     return render_template("entry_list.html", heading=heading, groups=groups,
-                           empty=empty,
+                           empty=empty, period=period, counts=counts,
+                           recent_weeks=RECENT_WEEKS,
                            priorities=entries.PRIORITIES,
                            priority_labels=entries.PRIORITY_LABELS,
                            default_kind=entries.Entry.kind,
@@ -99,9 +126,16 @@ def applications():
     make are ordered by priority (highest first, unprioritised last), those
     made by the date applied, and turned-down ones by the date of the
     decision.
+
+    The list keeps growing while the search goes on, so only the
+    applications whose status changed within a period are shown: by
+    default the last few weeks, otherwise the one the optional "start" and
+    "end" query arguments give as ISO dates, as for the PDF summary.
     """
-    jobs = [e for e in enumerate(tracker.load_applications())
-            if e[1].kind == entries.Entry.kind]
+    saved = [e for e in enumerate(tracker.load_applications())
+             if e[1].kind == entries.Entry.kind]
+    period = activity_period()
+    jobs = [e for e in saved if e[1].status_changed_between(*period)]
     to_apply = sorted((e for e in jobs if e[1].status == "to apply"),
                       key=lambda e: e[1].priority or 99)
     applied = sorted((e for e in jobs
@@ -114,8 +148,14 @@ def applications():
         ("Applied ({})".format(len(applied)), applied),
         ("Rejected ({})".format(len(rejected)), rejected),
     ]
-    return render_entry_list("My applications", groups,
-                             "" if jobs else "No saved applications yet.")
+    if jobs:
+        empty = ""
+    elif saved:
+        empty = "No application changed status in this period."
+    else:
+        empty = "No saved applications yet."
+    return render_entry_list("My applications", groups, empty,
+                             period=period, counts=(len(jobs), len(saved)))
 
 
 @app.route("/<any({}):page>".format(",".join(KIND_PAGES)))

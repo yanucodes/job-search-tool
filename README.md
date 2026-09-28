@@ -63,6 +63,14 @@ and *Generate PDF*, so both are always one click away.
   Jobs still to apply for are ordered by priority
   (highest first, unprioritised last); jobs already applied to by the date
   you applied (oldest first), turned-down jobs by the date of the decision.
+  As the list grows, the page keeps to what is current: it shows only the
+  applications whose status changed in the last two weeks — any date on
+  their timeline, or the day they were noted down while the timeline is
+  still empty. The filter above the list picks another period, with the
+  same *from* and *to* fields as the PDF summary, each optional; *Last 2
+  weeks* goes back to the default and *Show all* lifts the filter. The line
+  next to it says how many applications are shown out of how many are
+  saved.
 - **Recruiter contacts** (`/recruiters`), **Job fairs** (`/fairs`) and
   **Networking** (`/networking`) — one page per other kind of entry (see
   below), reached from the same navigation bar. Those efforts are recorded

@@ -4,6 +4,18 @@
 
 {% block content %}
     <h1>{{ heading }}</h1>
+    {% if period and counts[1] %}
+    <form method="GET" action="{{ request.path }}" class="filter">
+        <label for="filter-start">Status changed from: </label>
+        <input type="date" id="filter-start" name="start" value="{{ period[0] }}">
+        <label for="filter-end">to: </label>
+        <input type="date" id="filter-end" name="end" value="{{ period[1] }}">
+        <input type="submit" value="Filter">
+        <a href="{{ request.path }}" class="button">Last {{ recent_weeks }} weeks</a>
+        <a href="{{ url_for(request.endpoint, start='', end='') }}" class="button">Show all</a>
+        <span class="hint">Showing {{ counts[0] }} of {{ counts[1] }}</span>
+    </form>
+    {% endif %}
     {% if empty %}
     <h2>{{ empty }}</h2>
     {% endif %}

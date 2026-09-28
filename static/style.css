@@ -123,11 +123,20 @@ input[type="date"]:focus {
     box-shadow: 0 0 0 3px rgba(74, 154, 120, 0.18);
 }
 
-form.status-change {
+form.status-change,
+form.filter {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
     align-items: center;
+}
+
+form.filter {
+    margin: 0 10px 8px;
+}
+
+form.filter .hint {
+    margin-top: 0;
 }
 
 form.stacked {
