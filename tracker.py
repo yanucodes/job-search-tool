@@ -28,10 +28,18 @@ DOC_HEADER = r"""\documentclass{article}
 \section*{Übersicht der Eigenbemühungen}
 Zeitraum: %s -- %s
 """
-SECTION_HEADER = r"""\subsection*{%s}
-\begin{longtable}{|c|p{0.55\textwidth}|p{0.33\textwidth}|}
+# The section title is the first row of its table rather than a \subsection*
+# above it: longtable allows a page break right before itself, which could
+# leave the title alone at the foot of a page. Inside the first head, the
+# title always moves to the next page together with the first entry.
+SECTION_HEADER = r"""\begin{longtable}{|c|p{0.55\textwidth}|p{0.33\textwidth}|}
+\multicolumn{3}{@{}l}{\normalfont\large\bfseries %(section)s} \\[3.5ex]
 \hline
-\textbf{Nr.} & \textbf{%s} & \textbf{%s} \\
+\textbf{Nr.} & \textbf{%(entry)s} & \textbf{%(timeline)s} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Nr.} & \textbf{%(entry)s} & \textbf{%(timeline)s} \\
 \hline
 \endhead
 """
@@ -139,7 +147,10 @@ def write_latex_table(applications, start="", end=""):
         of_kind = [a for a in acted_on if a.kind == entry_class.kind]
         if not of_kind:
             continue
-        header = SECTION_HEADER % (entry_class.section, *entry_class.columns)
+        entry_column, timeline_column = entry_class.columns
+        header = SECTION_HEADER % {"section": entry_class.section,
+                                   "entry": entry_column,
+                                   "timeline": timeline_column}
         rows = [entry.latex_row(number)
                 for number, entry in enumerate(of_kind, start=1)]
         sections.append(header + "".join(rows) + SECTION_FOOTER)
