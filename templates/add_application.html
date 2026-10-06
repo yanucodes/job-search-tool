@@ -29,6 +29,9 @@
                 {% if field_types[field] == "checkbox" %}
                 <input type="checkbox" name="{{ field }}" value="1"
                        {% if form[field] %}checked{% endif %}>
+                {% elif field_types[field] == "textarea" %}
+                <textarea name="{{ field }}" rows="4">
+                    {{- form[field] if form[field] }}</textarea>
                 {% else %}
                 <input type="{{ field_types[field] }}" name="{{ field }}"
                        value="{{ form[field] if form[field] }}"

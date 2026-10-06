@@ -20,13 +20,18 @@ STATUSES = ["to apply", "applied", "invited", "interview"] + DECISIONS
 PRIORITIES = [1, 2, 3]
 PRIORITY_LABELS = {1: "high", 2: "moderate", 3: "low"}
 RECORD_FIELDS = ["id", "title", "company", "location", "published", "url"]
+# Free text kept for yourself. It is shown in the web interface only and
+# never printed in the PDF summary.
+TEXT_FIELDS = ["description", "notes"]
 KNOWN_FIELDS = ({"saved", "contact", "decision", "priority", "attended"}
-                | set(TIMELINE_FIELDS) | set(RECORD_FIELDS))
+                | set(TIMELINE_FIELDS) | set(RECORD_FIELDS)
+                | set(TEXT_FIELDS))
 REQUIRED_FIELDS = ["title", "company", "location", "url"]
 FIELD_TYPES = {"title": "text", "company": "text", "location": "text",
                "url": "url", "contact": "text", "published": "date",
                "saved": "date", "applied": "date", "invited": "date",
-               "attended": "checkbox"}
+               "attended": "checkbox", "description": "textarea",
+               "notes": "textarea"}
 LATEX_SPECIAL_CHARS = {
     "\\": r"\textbackslash{}",
     "&": r"\&",
@@ -154,13 +159,17 @@ class Entry:
     group = "Applications"
     page = "applications"
     form_fields = ["title", "company", "location", "url", "contact",
-                   "published", "applied"]
+                   "published", "applied", "description", "notes"]
     field_labels = {"title": "Job title", "company": "Company",
                     "location": "Location", "url": "Link to the posting",
                     "contact": "Contact person", "published": "Published",
-                    "applied": "Applied"}
+                    "applied": "Applied", "description": "Description",
+                    "notes": "Notes"}
     field_hints = {"applied": "leave empty if not applied yet; may be a past"
-                              " date"}
+                              " date",
+                   "description": "a few lines on what the job is about",
+                   "notes": "your own remarks, e.g. what to check or who to"
+                            " ask"}
     statuses = STATUSES
     status_labels = {}
     status_dated = True
@@ -178,7 +187,8 @@ class Entry:
     def __init__(self, id="", title="", company="", location="",
                  published="", url="", saved="", contact="", applied="",
                  invited="", interview=(), decided="", decision="",
-                 priority=None, attended=False, extra=None):
+                 priority=None, attended=False, description="", notes="",
+                 extra=None):
         """Create an entry.
 
         Args:
@@ -199,6 +209,8 @@ class Entry:
             priority: Optional priority level, one of PRIORITIES.
             attended: Whether an event was actually attended. Only kinds
                 that stand for an event use it.
+            description: Optional free text on what the entry is about.
+            notes: Optional free text with your own remarks.
             extra: Optional dictionary of further keys to keep, for values
                 in the tracker file that this class does not know about.
         """
@@ -217,6 +229,8 @@ class Entry:
         self.decision = decision
         self.priority = priority
         self.attended = attended
+        self.description = description
+        self.notes = notes
         self.extra = extra or {}
 
     @property
@@ -364,6 +378,16 @@ class Entry:
         """
         return self.status_labels.get(self.status, self.status)
 
+    @property
+    def text_fields(self):
+        """The free-text fields this kind of entry offers.
+
+        Returns:
+            Names of the fields of TEXT_FIELDS that the form of this kind
+            offers, in that order.
+        """
+        return [field for field in TEXT_FIELDS if field in self.form_fields]
+
     def set_status(self, status, date=""):
         """Set the status by updating the timeline.
 
@@ -416,6 +440,18 @@ class Entry:
         """
         self.priority = priority if priority in PRIORITIES else None
 
+    def set_texts(self, texts):
+        """Replace the free text of the fields this kind offers.
+
+        Args:
+            texts: Dictionary of new values by field name. Fields this kind
+                does not offer, or that the dictionary leaves out, are kept
+                as they are.
+        """
+        for field in self.text_fields:
+            if field in texts:
+                setattr(self, field, texts[field])
+
     def to_dict(self):
         """Convert the entry to a dictionary for the tracker file.
 
@@ -433,6 +469,8 @@ class Entry:
                      for field in RECORD_FIELDS})
         if self.contact:
             data["contact"] = self.contact
+        data.update({field: getattr(self, field) for field in TEXT_FIELDS
+                     if getattr(self, field)})
         if self.priority in PRIORITIES:
             data["priority"] = self.priority
         if self.attended:
@@ -528,11 +566,12 @@ class RecruiterContact(Entry):
     group = "Recruiter contacts"
     page = "recruiters"
     form_fields = ["title", "company", "contact", "location", "url",
-                   "applied"]
+                   "applied", "notes"]
     field_labels = {"title": "What the contact was about",
                     "company": "Agency", "contact": "Contact person",
                     "location": "Agency address",
-                    "url": "Agency website", "applied": "First contact"}
+                    "url": "Agency website", "applied": "First contact",
+                    "notes": "Notes"}
     field_hints = {"title": "e.g. Kontakt mit privatem Personalvermittler",
                    "company": "the agency, with its legal name if it differs"
                               " from the brand",
@@ -579,12 +618,13 @@ class FairVisit(Entry):
     group = "Job fairs"
     page = "fairs"
     form_fields = ["title", "company", "location", "url", "applied",
-                   "invited", "contact", "attended"]
+                   "invited", "contact", "attended", "notes"]
     field_labels = {"title": "Event", "company": "Organiser",
                     "location": "Venue", "url": "Event website",
                     "applied": "Date of the fair",
                     "invited": "Registered on",
-                    "contact": "Who you spoke to", "attended": "Attended"}
+                    "contact": "Who you spoke to", "attended": "Attended",
+                    "notes": "Notes"}
     field_hints = {"title": "e.g. IT-Jobmesse Musterstadt",
                    "invited": "when you signed up; leave empty for a fair"
                               " that took no registration",
@@ -720,11 +760,11 @@ class NetworkEffort(Entry):
     group = "Networking"
     page = "networking"
     form_fields = ["title", "company", "contact", "location", "url",
-                   "applied"]
+                   "applied", "notes"]
     field_labels = {"title": "What you did",
                     "company": "Organisation or person",
                     "contact": "Contact person", "location": "Place",
-                    "url": "Link", "applied": "Date"}
+                    "url": "Link", "applied": "Date", "notes": "Notes"}
     field_hints = {"title": "e.g. Initiativanfrage, Meetup, Empfehlung über"
                             " Kontakt",
                    "location": "or \"remote\" if it was not in person"}

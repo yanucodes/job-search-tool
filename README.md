@@ -59,7 +59,10 @@ and *Generate PDF*, so both are always one click away.
   alongside the earlier ones, so a second and third round are all recorded.
   Falling back to an earlier status clears them again, together with the
   rest of the later timeline. You can also set or clear
-  the priority here, or remove the entry from the list with *Delete*.
+  the priority here, or remove the entry from the list with *Delete*. The
+  details show the job's description and your notes too, when there are
+  any; *Edit description and notes* changes either, and saving one empty
+  clears it. Both are kept for you alone: the PDF summary never prints them.
   Jobs still to apply for are ordered by priority
   (highest first, unprioritised last); jobs already applied to by the date
   you applied (oldest first), turned-down jobs by the date of the decision.
@@ -75,8 +78,8 @@ and *Generate PDF*, so both are always one click away.
   **Networking** (`/networking`) — one page per other kind of entry (see
   below), reached from the same navigation bar. Those efforts are recorded
   rather than worked through, so each page is a single list, newest first,
-  with the count in its heading. The entries open, change status and delete
-  exactly like the applications do.
+  with the count in its heading. The entries open, change status, take
+  notes and delete exactly like the applications do.
 - **Add manually** (`/new`) — adds an entry to the list. The *Kind of
   entry* dropdown at the top chooses what sort of effort is being recorded (see
   below) and reloads the form with the fields and names of that kind, so a
@@ -84,7 +87,9 @@ and *Generate PDF*, so both are always one click away.
   a job title and a posting. Four fields are always required, whatever they
   are called, because the PDF summary is built from them; the rest are
   optional. Filling in the date field records an effort already made, so a
-  job application starts in the *Applied* group instead of *To apply*.
+  job application starts in the *Applied* group instead of *To apply*. A
+  job application also takes a few lines describing the job, and every
+  kind takes notes of your own.
   Saving returns you to the page of the kind you added.
 - **Generate PDF** (`/pdf`) — compiles a PDF summary of the
   entries you acted on and how each went, using `pdflatex` (must be
@@ -193,9 +198,10 @@ Everything the tool saves lives in the configured output directory:
   the conversation and the final decision, and what the decision was. The
   `kind` key says which sort of effort the entry records. An entry with a
   chosen priority also has a `priority` key (`1` high, `2` moderate, `3`
-  low), and one with a contact person a `contact` key; both are absent when
-  unset. Entries are loaded as the objects defined in `entries.py` and
-  written back with their `to_dict()`.
+  low), one with a contact person a `contact` key, and one with a
+  description or notes a `description` or `notes` key; all of them are
+  absent when unset. Entries are loaded as the objects defined in
+  `entries.py` and written back with their `to_dict()`.
 - `applications.tex` — a LaTeX summary of the entries you acted on and their
   outcomes, one section per kind. It is rewritten whenever the list changes,
   and again whenever *Generate PDF* runs — then holding only the entries of

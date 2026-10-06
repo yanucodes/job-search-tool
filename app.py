@@ -222,6 +222,8 @@ def new_application():
         contact = request.form.get("contact", "").strip()
         saved = request.form.get("saved", "").strip()
         attended = bool(request.form.get("attended"))
+        description = request.form.get("description", "").strip()
+        notes = request.form.get("notes", "").strip()
         raw = request.form.get("priority", "")
         priority = int(raw) if raw.isdigit() and int(raw) in entries.PRIORITIES \
             else None
@@ -229,7 +231,7 @@ def new_application():
             record = {"id": uuid.uuid4().hex, "published": published, **fields}
             tracker.add_application(record, priority, applied,
                                     entry_class.kind, contact, saved,
-                                    attended, invited)
+                                    attended, invited, description, notes)
             return redirect(entry_page(entry_class))
         missing = ", ".join(entry_class.field_labels[key]
                             for key in entries.REQUIRED_FIELDS
@@ -292,6 +294,25 @@ def update_priority(index):
         return redirect(url_for("applications"))
     tracker.update_priority(index, priority)
     return redirect(entry_page(applications[index]))
+
+
+@app.route("/entries/<int:index>/texts", methods=["POST"])
+def update_texts(index):
+    """Replace the description and notes of a saved entry.
+
+    Only the free-text fields the entry's kind offers are taken from the
+    form; a field posted empty is cleared.
+
+    Args:
+        index: Index of the entry in the saved list.
+    """
+    applications = tracker.load_applications()
+    if not 0 <= index < len(applications):
+        return redirect(url_for("applications"))
+    entry = applications[index]
+    tracker.update_texts(index, {field: request.form.get(field, "").strip()
+                                 for field in entry.text_fields})
+    return redirect(entry_page(entry))
 
 
 @app.route("/entries/<int:index>/delete", methods=["POST"])

@@ -12,7 +12,9 @@
     "company": "Beispiel Tech GmbH",
     "location": "Musterstadt (hybrid)",
     "published": "2026-06-12",
-    "url": "https://example.com/demo/jobs/python-backend"
+    "url": "https://example.com/demo/jobs/python-backend",
+    "description": "REST backend of a booking platform: Python, FastAPI, PostgreSQL.\nSmall team, hybrid, two office days a week.",
+    "notes": "Ask about the on-call rota."
   },
   {
     "kind": "job",

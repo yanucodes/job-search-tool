@@ -40,6 +40,9 @@
             <p>{{ application.location }}
                {%- if application.published %} · published
                {{ application.published }}{% endif %}</p>
+            {% if application.description %}
+            <p class="entry-text">{{ application.description }}</p>
+            {% endif %}
             {% if application.contact %}
             <p>{{ application.field_labels["contact"] }}:
                {{ application.contact }}</p>
@@ -51,6 +54,9 @@
                     {%- if field == "decided" %} ({{ application.decision }}){% endif %}</li>
                 {% endfor %}
             </ul>
+            {% if application.notes %}
+            <p class="entry-text">{{ application.field_labels["notes"] }}: {{ application.notes }}</p>
+            {% endif %}
             <form method="POST" class="status-change"
                   action="{{ url_for('update_status', index=index, **filter_args) }}">
                 <label for="status-{{ index }}">Status: </label>
@@ -83,6 +89,25 @@
                     {% endfor %}
                 </select>
             </form>
+            {% endif %}
+            {% if application.text_fields %}
+            <details class="edit-texts">
+                <summary>Edit
+                    {% for field in application.text_fields -%}
+                    {{ application.field_labels[field]|lower }}
+                    {%- if not loop.last %} and {% endif %}
+                    {%- endfor %}</summary>
+                <form method="POST" class="stacked"
+                      action="{{ url_for('update_texts', index=index, **filter_args) }}">
+                    {% for field in application.text_fields %}
+                    <label class="field">{{ application.field_labels[field] }}
+                        <textarea name="{{ field }}" rows="4">
+                            {{- application|attr(field) }}</textarea>
+                    </label>
+                    {% endfor %}
+                    <input type="submit" value="Save">
+                </form>
+            </details>
             {% endif %}
             <form method="POST"
                   action="{{ url_for('delete_application', index=index, **filter_args) }}"

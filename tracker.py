@@ -162,7 +162,8 @@ def write_latex_table(applications, start="", end=""):
 
 
 def add_application(record, priority=None, applied="", kind="job",
-                    contact="", saved="", attended=False, invited=""):
+                    contact="", saved="", attended=False, invited="",
+                    description="", notes=""):
     """Add an entry to the application list with an empty timeline.
 
     Args:
@@ -182,6 +183,8 @@ def add_application(record, priority=None, applied="", kind="job",
         attended: Whether an event was already attended.
         invited: Optional ISO date (YYYY-MM-DD) of the second step of the
             timeline, e.g. the day an event was registered for.
+        description: Optional free text on what the entry is about.
+        notes: Optional free text with your own remarks.
     """
     applications = load_applications()
     entry_class = entries.REGISTRY.get(kind, entries.Entry)
@@ -191,7 +194,7 @@ def add_application(record, priority=None, applied="", kind="job",
              if key not in entries.RECORD_FIELDS}
     applications.append(entry_class(
         applied=applied, invited=invited, contact=contact,
-        saved=saved, attended=attended,
+        saved=saved, attended=attended, description=description, notes=notes,
         priority=priority if priority in entries.PRIORITIES else None,
         extra=extra, **known))
     save_applications(applications)
@@ -231,4 +234,18 @@ def update_priority(index, priority):
     """
     applications = load_applications()
     applications[index].set_priority(priority)
+    save_applications(applications)
+
+
+def update_texts(index, texts):
+    """Replace the description and notes of a saved entry.
+
+    Args:
+        index: Index of the entry in the saved list.
+        texts: Dictionary of new values by field name, for the fields of
+            entries.TEXT_FIELDS the entry's kind offers. An empty value
+            clears the field.
+    """
+    applications = load_applications()
+    applications[index].set_texts(texts)
     save_applications(applications)
