@@ -5,6 +5,7 @@ import datetime
 import json
 import os
 import random
+import shutil
 import subprocess
 import tempfile
 import uuid
@@ -12,6 +13,7 @@ import uuid
 from flask import Flask, redirect, render_template, request, send_file, \
     url_for
 
+import companies
 import config
 import entries
 import tracker
@@ -46,6 +48,7 @@ def toolbar():
     pages = [(entries.Entry.group, url_for("applications"))]
     pages += [(entry_class.group, url_for("entry_list", page=page))
               for page, entry_class in KIND_PAGES.items()]
+    pages.append(("Companies", url_for("companies_page")))
     return {"nav_pages": pages,
             "has_entries": bool(tracker.load_applications())}
 
@@ -62,6 +65,17 @@ def filter_args():
     """
     return {key: request.args[key] for key in FILTER_ARGS
             if key in request.args}
+
+
+def posted_priority():
+    """Return the priority a form posted.
+
+    Returns:
+        One of entries.PRIORITIES, or None when no valid one was chosen.
+    """
+    raw = request.form.get("priority", "")
+    return int(raw) if raw.isdigit() and int(raw) in entries.PRIORITIES \
+        else None
 
 
 def activity_period():
@@ -224,9 +238,7 @@ def new_application():
         attended = bool(request.form.get("attended"))
         description = request.form.get("description", "").strip()
         notes = request.form.get("notes", "").strip()
-        raw = request.form.get("priority", "")
-        priority = int(raw) if raw.isdigit() and int(raw) in entries.PRIORITIES \
-            else None
+        priority = posted_priority()
         if all(fields.values()):
             record = {"id": uuid.uuid4().hex, "published": published, **fields}
             tracker.add_application(record, priority, applied,
@@ -286,9 +298,7 @@ def update_priority(index):
     Args:
         index: Index of the entry in the saved list.
     """
-    raw = request.form.get("priority", "")
-    priority = int(raw) if raw.isdigit() and int(raw) in entries.PRIORITIES \
-        else None
+    priority = posted_priority()
     applications = tracker.load_applications()
     if not 0 <= index < len(applications):
         return redirect(url_for("applications"))
@@ -328,6 +338,100 @@ def delete_application(index):
     page = entry_page(applications[index])
     tracker.delete_application(index)
     return redirect(page)
+
+
+def posted_company_fields():
+    """Return the company details a form posted, stripped of whitespace.
+
+    Returns:
+        Dictionary of values by field name, for the keys of companies.FIELDS.
+    """
+    return {field: request.form.get(field, "").strip()
+            for field in companies.FIELDS}
+
+
+def render_companies(form=None, error=None):
+    """Render the companies page.
+
+    Each company is paired with its index in the saved list, which its forms
+    post back, and the list is ordered by priority, then by name.
+
+    Args:
+        form: Values to fill the add form with, after a failed attempt.
+        error: What was missing from that attempt, or None.
+
+    Returns:
+        The rendered page.
+    """
+    saved = sorted(enumerate(companies.load_companies()),
+                   key=lambda e: e[1].sort_key)
+    return render_template("companies.html", companies=saved,
+                           form=form or {}, error=error,
+                           fields=companies.FIELDS,
+                           field_labels=companies.FIELD_LABELS,
+                           field_types=companies.FIELD_TYPES,
+                           field_hints=companies.FIELD_HINTS,
+                           required=companies.REQUIRED_FIELDS,
+                           priorities=entries.PRIORITIES,
+                           priority_labels=entries.PRIORITY_LABELS)
+
+
+@app.route("/companies")
+def companies_page():
+    """Show the companies you are interested in applying to.
+
+    They are kept apart from the application list and never reach the PDF
+    summary; the page also holds the form that adds one.
+    """
+    return render_companies()
+
+
+@app.route("/companies/new", methods=["POST"])
+def new_company():
+    """Add a company to the list.
+
+    Only its name is required. When it is missing the page comes back with
+    the form filled in as it was posted.
+    """
+    fields = posted_company_fields()
+    missing = [companies.FIELD_LABELS[field]
+               for field in companies.REQUIRED_FIELDS if not fields[field]]
+    if missing:
+        return render_companies(request.form,
+                                "Still needed: {}.".format(", ".join(missing)))
+    companies.add_company(fields, posted_priority())
+    return redirect(url_for("companies_page"))
+
+
+@app.route("/companies/<int:index>/edit", methods=["POST"])
+def edit_company(index):
+    """Replace the details of a saved company.
+
+    A company cannot lose its name, so an edit posted without one keeps the
+    old name and changes the rest.
+
+    Args:
+        index: Index of the company in the saved list.
+    """
+    saved = companies.load_companies()
+    if 0 <= index < len(saved):
+        fields = posted_company_fields()
+        if not fields["name"]:
+            del fields["name"]
+        companies.update_company(index, fields, posted_priority())
+    return redirect(url_for("companies_page"))
+
+
+@app.route("/companies/<int:index>/delete", methods=["POST"])
+def delete_company(index):
+    """Remove a company from the list.
+
+    Args:
+        index: Index of the company in the saved list.
+    """
+    if 0 <= index < len(companies.load_companies()):
+        companies.delete_company(index)
+    return redirect(url_for("companies_page"))
 
 
 @app.route("/pdf")
@@ -398,11 +502,13 @@ def run_demo():
     never reads or writes the real tracker files whatever is configured.
     They are served from a temporary copy with their dates moved into the
     period the applications page shows by default, so the demo opens on a
-    full page and leaves the entries in the repository as they are. Its own
-    port keeps it beside an instance serving the real ones.
+    full page and leaves the entries in the repository as they are. The demo
+    companies are copied alongside, unchanged. Its own port keeps it beside
+    an instance serving the real ones.
     """
     here = os.path.dirname(os.path.abspath(__file__))
-    source = os.path.join(here, "demo", "results", tracker.APPLICATIONS_FILE)
+    demo_dir = os.path.join(here, "demo", "results")
+    source = os.path.join(demo_dir, tracker.APPLICATIONS_FILE)
     with open(source, "r", encoding="utf-8") as f:
         records = [recent_dates(record, RECENT_WEEKS * 7)
                    for record in json.load(f)]
@@ -411,6 +517,8 @@ def run_demo():
         with open(os.path.join(output_dir, tracker.APPLICATIONS_FILE), "w",
                   encoding="utf-8") as f:
             json.dump(records, f, indent=2, ensure_ascii=False)
+        shutil.copy(os.path.join(demo_dir, companies.COMPANIES_FILE),
+                    output_dir)
         app.run(port=DEMO_PORT, debug=False, use_reloader=False)
 
 

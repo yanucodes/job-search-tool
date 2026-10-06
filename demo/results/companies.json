@@ -1,0 +1,27 @@
+[
+  {
+    "id": "DEMO-C01",
+    "name": "Beispiel Software AG",
+    "location": "Musterstadt",
+    "url": "https://example.com/demo/careers/beispiel-software",
+    "added": "2026-06-10",
+    "notes": "Small backend team.\nWatch the careers page for Python roles.",
+    "priority": 1
+  },
+  {
+    "id": "DEMO-C02",
+    "name": "Muster Analytics GmbH",
+    "location": "Remote (Germany)",
+    "url": "https://example.com/demo/careers/muster-analytics",
+    "added": "2026-06-14",
+    "priority": 2
+  },
+  {
+    "id": "DEMO-C03",
+    "name": "Testfirma Energie GmbH",
+    "location": "Beispielhausen",
+    "url": "https://example.com/demo/careers/testfirma-energie",
+    "added": "2026-06-20",
+    "notes": "Check again once the new office opens."
+  }
+]

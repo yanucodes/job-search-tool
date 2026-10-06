@@ -80,6 +80,14 @@ and *Generate PDF*, so both are always one click away.
   rather than worked through, so each page is a single list, newest first,
   with the count in its heading. The entries open, change status, take
   notes and delete exactly like the applications do.
+- **Companies** (`/companies`) — the companies you would like to work for,
+  whether or not they have an opening yet: name, location, a link to their
+  careers page, notes and a priority. *Add a company* at the top of the page
+  takes a new one, where only the name is required; click a company to
+  open its careers page, *Edit* its details or *Delete* it. The list is
+  ordered by priority (highest first, unprioritised last), then by name. A
+  company is not an effort made, so it is kept apart from the entries and
+  never reaches the PDF summary.
 - **Add manually** (`/new`) — adds an entry to the list. The *Kind of
   entry* dropdown at the top chooses what sort of effort is being recorded (see
   below) and reloads the form with the fields and names of that kind, so a
@@ -184,7 +192,8 @@ so your own files stay out of reach whatever is configured, and the demo's
 own port leaves an instance on the real ones running. Each run serves a
 temporary copy of them with their dates moved to random days of the last
 two weeks, every timeline keeping its order, so the demo opens on a full
-applications page; what you change there is gone when the demo stops.
+applications page; what you change there is gone when the demo stops. The
+demo companies are served from the same copy, as they are saved.
 `demo/results/applications.pdf` is the summary those entries produce with
 the dates they are saved with, for a look at the output without running
 anything.
@@ -202,6 +211,9 @@ Everything the tool saves lives in the configured output directory:
   description or notes a `description` or `notes` key; all of them are
   absent when unset. Entries are loaded as the objects defined in
   `entries.py` and written back with their `to_dict()`.
+- `companies.json` — the companies on the *Companies* page, each with the
+  date it was added; `notes` and `priority` keys are absent when unset.
+  Created when the first company is added.
 - `applications.tex` — a LaTeX summary of the entries you acted on and their
   outcomes, one section per kind. It is rewritten whenever the list changes,
   and again whenever *Generate PDF* runs — then holding only the entries of
