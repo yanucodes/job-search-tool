@@ -164,8 +164,9 @@ Going to a fair is two documented steps, and the summary reports both:
 Set the status to *registered* with the date you signed up on, and to
 *attended* with the day of the fair, which is what that second date is.
 Signing up is an effort in itself, so a fair enters the summary from the day
-you registered, counted on that day and listing the day it takes place as
-`Findet statt am` until you have been. A fair that took no registration is
+you registered, counted on that day and listed with that one line until the
+day of the fair has come. Its details show the day ahead as
+`Findet statt am` in the meantime. A fair that took no registration is
 reported once visited, and has the one line.
 
 A fair whose day has not come yet cannot have been visited, so ticking
@@ -175,8 +176,11 @@ turns into a visit on the day itself.
 The web interface is in English and the PDF summary in German, because the
 summary is what the Arbeitsagentur is handed. The timeline in an entry's
 details is shown in German too, so what you see there is what will be
-reported. Both list it in date order, so it reads as the course of events
-even where the stages did not follow one another.
+reported — except for dates still ahead, such as an interview already
+arranged: the details show them, but the summary prints only dates up to
+the day it is generated on, and a date still ahead does not place an entry
+in a period either. Both list the timeline in date order, so it reads as
+the course of events even where the stages did not follow one another.
 
 To add a kind, subclass `Entry`, override its class attributes — the labels,
 the path of its page, which fields the form offers and what they are called

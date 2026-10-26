@@ -278,11 +278,16 @@ class Entry:
     def steps(self):
         """The stages that have happened on this entry.
 
+        A date still ahead -- an interview already arranged -- is recorded
+        but has not happened, so it is not a step yet.
+
         Returns:
             List of (field, date) pairs in date order, one per recorded
-            timeline date. Empty while nothing is recorded.
+            timeline date up to today. Empty while none is recorded.
         """
-        return [(field, date) for field, _, date in self.timeline_lines()]
+        today = datetime.date.today().isoformat()
+        return [(field, date)
+                for field, _, date in self.timeline_lines(until=today)]
 
     @property
     def report_dates(self):
@@ -515,7 +520,7 @@ class Entry:
             f"\\url{{{self.url}}}",
         ]
 
-    def timeline_lines(self):
+    def timeline_lines(self, until=""):
         """Build the recorded timeline as labelled dates.
 
         A field holding several dates contributes one line per date. Those
@@ -525,6 +530,12 @@ class Entry:
         lines: a timeline is read as the course of events, which the order
         of the fields only matches where the stages follow one another.
 
+        Args:
+            until: Optional ISO date (YYYY-MM-DD). When given, dates after
+                it are left out before the lines are numbered, so that an
+                interview still ahead neither shows nor makes the one
+                before it the first of two. When empty, every date shows.
+
         Returns:
             List of (field, label, date) triples in date order, leaving out
             the fields no date was recorded in. Stages sharing a date keep
@@ -533,11 +544,10 @@ class Entry:
         lines = []
         for field in TIMELINE_FIELDS:
             label = self.timeline_labels[field]
-            if field not in MULTI_FIELDS:
-                if getattr(self, field):
-                    lines.append((field, label, getattr(self, field)))
-                continue
-            dates = getattr(self, field)
+            value = getattr(self, field)
+            dates = [date for date in
+                     (value if field in MULTI_FIELDS else [value])
+                     if date and within(date, "", until)]
             lines.extend(
                 (field, f"{label} {number}" if len(dates) > 1 else label, date)
                 for number, date in enumerate(dates, start=1))
@@ -546,12 +556,16 @@ class Entry:
     def latex_timeline_cell(self):
         """Build the table cell with the timeline of the entry.
 
+        The summary reports what was done, so a date still ahead is left
+        out of it even though the entry records it.
+
         Returns:
-            LaTeX for the cell: one line per recorded timeline date, each
-            labelled in the wording of this kind of entry.
+            LaTeX for the cell: one line per recorded timeline date up to
+            today, each labelled in the wording of this kind of entry.
         """
         lines = []
-        for field, label, date in self.timeline_lines():
+        today = datetime.date.today().isoformat()
+        for field, label, date in self.timeline_lines(until=today):
             if field == "decided" and self.decision:
                 label = self.decision_labels[self.decision]
             lines.append(f"{label}: {format_date(date)}")
@@ -717,30 +731,34 @@ class FairVisit(Entry):
         """The stages of the fair that have happened.
 
         The day it takes place is known before the visit, but it is a step
-        taken only once the fair has been gone to: a fair still ahead must
-        not be counted in a period that has not reached it.
+        taken only once the fair has been gone to. A day still ahead is left
+        out as any date still ahead is; a day passed is left out too when
+        the fair was not attended.
 
         Returns:
             List of (field, date) pairs, as for any entry, leaving out the
-            day of the fair while the visit is still ahead.
+            day of the fair unless it was visited.
         """
         return [(field, date) for field, date in super().steps()
                 if field != "applied" or self.visited]
 
-    def timeline_lines(self):
+    def timeline_lines(self, until=""):
         """Call the day of the fair what it is until the fair was attended.
 
         The date the entry carries is the day the fair takes place, which
         is known while the visit is still ahead; it is a day visited on
-        only once the fair has been to. A fair signed up for is reported
-        before that, and reports the day it takes place as one still to
-        come.
+        only once the fair has been to. Until then the entry shows it as a
+        day still to come. The summary, which leaves out dates still ahead,
+        reports a fair signed up for with its registration alone.
+
+        Args:
+            until: Optional ISO date, as for any entry.
 
         Returns:
             List of (field, label, date) triples, as for any entry.
         """
         lines = []
-        for field, label, date in super().timeline_lines():
+        for field, label, date in super().timeline_lines(until):
             if field == "applied" and not self.visited:
                 label = self.planned_label
             lines.append((field, label, date))
