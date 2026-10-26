@@ -106,7 +106,12 @@ and *Generate PDF*, so both are always one click away.
   efforts. The two date fields next to the button limit the summary to a
   period: with a start date only entries acted on on or after it are
   included, with an end date only those on or before it. Both are optional
-  — leaving them empty summarizes everything you acted on. The period is
+  — leaving them empty summarizes everything you acted on. What places an
+  entry in a period is a step of your own — applying, an interview; for a
+  recruiter or a fair also sending documents or registering — not an answer
+  from the other side: an application sent in August and rejected in
+  September without an interview is reported for August only, while one
+  interviewed for in September appears in both months. The period is
   printed under the title as `Zeitraum`, so the summary says what it
   covers, and always as a range between two dates: a bound you left open is
   filled in with the date the summary reaches to anyway — the oldest entry

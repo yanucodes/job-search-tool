@@ -148,6 +148,10 @@ class Entry:
         timeline_ordered: Whether the stages of the timeline follow one
             another, so that reaching one means the later ones have not
             happened. False where they may happen in any order.
+        report_fields: Which timeline fields are steps of your own, the
+            ones that place an entry in the period of a summary. An answer
+            from the other side -- an invitation, a decision -- is printed
+            in the timeline but places the entry nowhere.
         section: Heading of the section this kind gets in the PDF summary.
         columns: Headings of the two table columns, as a (left, right) pair.
         timeline_labels: German label per timeline field.
@@ -174,6 +178,7 @@ class Entry:
     status_labels = {}
     status_dated = True
     timeline_ordered = True
+    report_fields = ["applied", "interview"]
     section = "Bewerbungen"
     columns = ("Stellenangebot", "Bewerbungsverlauf")
     timeline_labels = {
@@ -270,27 +275,38 @@ class Entry:
         """
         return self.applied
 
-    @property
-    def report_dates(self):
-        """The days something happened on this entry.
-
-        Every recorded stage is a documented step of its own, not only the
-        first one: an application sent in one month may be answered and
-        talked about in the next.
+    def steps(self):
+        """The stages that have happened on this entry.
 
         Returns:
-            List of ISO dates in date order, one per recorded timeline
-            date. Empty while nothing is recorded.
+            List of (field, date) pairs in date order, one per recorded
+            timeline date. Empty while nothing is recorded.
         """
-        return [date for _, _, date in self.timeline_lines()]
+        return [(field, date) for field, _, date in self.timeline_lines()]
+
+    @property
+    def report_dates(self):
+        """The days an effort of your own was made on this entry.
+
+        Not only the first one: an application sent in one month may be
+        interviewed for in the next. Being answered is not an effort,
+        though, so an application rejected the month after it was sent
+        belongs to the month it was sent in alone.
+
+        Returns:
+            List of ISO dates in date order, one per recorded date of the
+            fields in report_fields. Empty while none is recorded.
+        """
+        return [date for field, date in self.steps()
+                if field in self.report_fields]
 
     def changed_between(self, start, end):
-        """Whether anything happened on this entry within a period.
+        """Whether an effort was made on this entry within a period.
 
         A summary reports a period of the job search rather than a set of
-        entries, so an entry belongs in it whenever one of its steps falls
+        entries, so an entry belongs in it whenever one of its efforts falls
         inside it -- the entry then appears with its whole timeline, which
-        is what places that step in its course.
+        is what places that effort in its course.
 
         Args:
             start: Optional ISO date (YYYY-MM-DD) of the lower bound. An
@@ -299,14 +315,15 @@ class Entry:
                 open when empty. Both bounds are inclusive.
 
         Returns:
-            True if at least one recorded date lies within the period.
+            True if at least one of report_dates lies within the period.
         """
         return any(within(date, start, end) for date in self.report_dates)
 
     def status_changed_between(self, start, end):
         """Whether the status of this entry changed within a period.
 
-        Every recorded step is such a change. While none is recorded, the
+        Every recorded step is such a change, an answer as much as an
+        effort of your own. While none is recorded, the
         entry has had its status since the day it was noted down, so that
         day counts instead: a job saved last week is as current as one
         applied to last week.
@@ -320,8 +337,8 @@ class Entry:
         Returns:
             True if the status changed at least once within the period.
         """
-        return any(within(date, start, end)
-                   for date in self.report_dates or [self.saved])
+        dates = [date for _, date in self.steps()] or [self.saved]
+        return any(within(date, start, end) for date in dates)
 
     def last_stage(self):
         """Return the timeline field that was acted on most recently.
@@ -580,6 +597,7 @@ class RecruiterContact(Entry):
     status_labels = {"to apply": "not contacted yet", "applied": "in contact",
                      "invited": "documents sent", "interview": "call held"}
     timeline_ordered = False
+    report_fields = ["applied", "invited", "interview"]
     section = "Vermittlerkontakte"
     columns = ("Vermittler / Kontakt", "Verlauf")
     timeline_labels = {
@@ -634,6 +652,7 @@ class FairVisit(Entry):
                                " -- a fair enters the PDF summary at that"
                                " point, not before"}
     statuses = ["planned", "registered", "attended"]
+    report_fields = ["applied", "invited", "interview"]
     section = "Jobmessen"
     columns = ("Veranstaltung", "Verlauf")
     timeline_labels = {
@@ -694,19 +713,18 @@ class FairVisit(Entry):
         """
         return self.applied if self.visited else self.invited
 
-    @property
-    def report_dates(self):
-        """The days this fair counts as documented on.
+    def steps(self):
+        """The stages of the fair that have happened.
 
         The day it takes place is known before the visit, but it is a step
         taken only once the fair has been gone to: a fair still ahead must
         not be counted in a period that has not reached it.
 
         Returns:
-            List of ISO dates in date order, leaving out the day of the
-            fair while the visit is still ahead.
+            List of (field, date) pairs, as for any entry, leaving out the
+            day of the fair while the visit is still ahead.
         """
-        return [date for field, _, date in self.timeline_lines()
+        return [(field, date) for field, date in super().steps()
                 if field != "applied" or self.visited]
 
     def timeline_lines(self):
